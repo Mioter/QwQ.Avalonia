@@ -3,7 +3,7 @@ name: Publish NuGet Package
 on:
   push:
     branches:
-      - main # 监听推送至 main 分支的事件
+      - master # 监听推送至 master 分支的事件
     tags:
       - 'v*' # 监听以 "v" 开头的标签推送事件
 
