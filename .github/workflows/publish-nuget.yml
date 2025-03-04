@@ -1,0 +1,32 @@
+name: Publish NuGet Package
+
+on:
+  push:
+    branches:
+      - main # 监听推送至 main 分支的事件
+    tags:
+      - 'v*' # 监听以 "v" 开头的标签推送事件
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '9.0.x' # 根据需要选择 .NET 版本
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build project
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Pack project
+      run: dotnet pack --configuration Release --no-build --output ./nupkg
+
+    - name: Publish to NuGet
+      run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
