@@ -4,6 +4,12 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        
+        <PackageId>QwQ.Avalonia</PackageId>
+        <Version>0.0.1</Version>
+        <Authors>Mioter</Authors>
+        <Description>提供了一些简单的Avalonia自定义控件以及相关辅助类。自己用的，没啦！QwQ</Description>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
 </Project>
