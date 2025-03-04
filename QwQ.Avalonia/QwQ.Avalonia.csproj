@@ -12,4 +12,9 @@
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
     
+    <ItemGroup>
+      <ProjectReference Include="..\QwQ.Avalonia.Control\QwQ.Avalonia.Control.csproj" />
+      <ProjectReference Include="..\QwQ.Avalonia.Helper\QwQ.Avalonia.Helper.csproj" />
+    </ItemGroup>
+    
 </Project>
