@@ -1,4 +1,4 @@
-# <p align="center"> QwQ.Avalonia <p>
+# <p align="center"> QwQ Avalonia <p>
 ## 🎐 也许是介绍
 
 <br>
