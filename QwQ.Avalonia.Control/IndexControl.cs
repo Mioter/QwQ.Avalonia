@@ -24,7 +24,7 @@ public abstract class IndexControl : ItemsControl
 
     private TransitioningContentControl? _transitioningContent;
 
-    static IndexControl()
+    public IndexControl()
     {
         IndexProperty.Changed.AddClassHandler<IndexControl>((x, _) => x.UpdateContent());
     }

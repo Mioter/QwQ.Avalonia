@@ -21,7 +21,7 @@ public class SwitchControl : ContentControl
             nameof(FalseContent),
             inherits: true); // 启用属性继承
 
-    static SwitchControl()
+    public SwitchControl()
     {
         ConditionProperty.Changed.AddClassHandler<SwitchControl>((x, _) => x.UpdateContent());
         TrueContentProperty.Changed.AddClassHandler<SwitchControl>((x, _) => x.UpdateContent());
