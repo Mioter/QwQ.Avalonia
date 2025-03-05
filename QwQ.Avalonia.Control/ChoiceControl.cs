@@ -8,19 +8,23 @@ using QwQ.Avalonia.Helper;
 
 namespace QwQ.Avalonia.Control;
 
-public abstract class ChoiceControl : ItemsControl
+public class ChoiceControl : ItemsControl
 {
     // 定义 SelectName 附加属性
     public static readonly AttachedProperty<object> SelectNameProperty =
         AvaloniaProperty.RegisterAttached<ChoiceControl, AvaloniaObject, object>("SelectName");
 
     // 定义 Selected 属性
-    public static readonly StyledProperty<object?> SelectedProperty =
-        AvaloniaProperty.Register<ChoiceControl, object?>(nameof(Selected));
+    public static readonly StyledProperty<object?> SelectedProperty = AvaloniaProperty.Register<
+        ChoiceControl,
+        object?
+    >(nameof(Selected));
 
     // 定义 TargetType 属性
-    public static readonly StyledProperty<Type?> TargetTypeProperty =
-        AvaloniaProperty.Register<ChoiceControl, Type?>(nameof(TargetType));
+    public static readonly StyledProperty<Type?> TargetTypeProperty = AvaloniaProperty.Register<
+        ChoiceControl,
+        Type?
+    >(nameof(TargetType));
 
     // 定义 PageTransition 属性
     public static readonly StyledProperty<IPageTransition?> PageTransitionProperty =
@@ -68,11 +72,15 @@ public abstract class ChoiceControl : ItemsControl
         base.OnApplyTemplate(e);
 
         // 查找模板中的 TransitioningContentControl
-        _transitioningContent = e.NameScope.Find<TransitioningContentControl>("PART_TransitioningContent");
+        _transitioningContent = e.NameScope.Find<TransitioningContentControl>(
+            "PART_TransitioningContent"
+        );
 
         // 绑定 PageTransition 属性
-        _transitioningContent?.Bind(TransitioningContentControl.PageTransitionProperty,
-            this.GetObservable(PageTransitionProperty));
+        _transitioningContent?.Bind(
+            TransitioningContentControl.PageTransitionProperty,
+            this.GetObservable(PageTransitionProperty)
+        );
 
         UpdateChildrenVisibility();
     }
@@ -84,9 +92,11 @@ public abstract class ChoiceControl : ItemsControl
         {
             foreach (object? item in e.NewItems)
             {
-                if (item is not AvaloniaObject avaloniaObj) continue;
+                if (item is not AvaloniaObject avaloniaObj)
+                    continue;
 
-                var subscription = avaloniaObj.GetObservable(SelectNameProperty)
+                var subscription = avaloniaObj
+                    .GetObservable(SelectNameProperty)
                     .Subscribe(_ => UpdateChildrenVisibility());
                 _subscriptions[avaloniaObj] = subscription;
             }
@@ -97,7 +107,11 @@ public abstract class ChoiceControl : ItemsControl
         {
             foreach (object? item in e.OldItems)
             {
-                if (item is not AvaloniaObject avaloniaObj || !_subscriptions.TryGetValue(avaloniaObj, out var sub)) continue;
+                if (
+                    item is not AvaloniaObject avaloniaObj
+                    || !_subscriptions.TryGetValue(avaloniaObj, out var sub)
+                )
+                    continue;
 
                 sub.Dispose();
                 _subscriptions.Remove(avaloniaObj);
@@ -109,17 +123,20 @@ public abstract class ChoiceControl : ItemsControl
 
     private void UpdateChildrenVisibility()
     {
-        if (_transitioningContent == null) return;
+        if (_transitioningContent == null)
+            return;
 
         object? selected = ConvertValueToTargetType(Selected);
 
         // 找到与 Selected 匹配的子项
         foreach (object? item in Items)
         {
-            if (item is not AvaloniaObject avaloniaChild) continue;
+            if (item is not AvaloniaObject avaloniaChild)
+                continue;
 
             object? name = ConvertValueToTargetType(GetSelectName(avaloniaChild));
-            if (!Equals(name, selected)) continue;
+            if (!Equals(name, selected))
+                continue;
             // 更新 TransitioningContentControl 的内容
             _transitioningContent.Content = item;
             return;
@@ -131,7 +148,8 @@ public abstract class ChoiceControl : ItemsControl
 
     private object? ConvertValueToTargetType(object? value)
     {
-        if (TargetType == null) return value;
+        if (TargetType == null)
+            return value;
 
         try
         {
@@ -140,8 +158,10 @@ public abstract class ChoiceControl : ItemsControl
             {
                 return TypeDescriptor.GetConverter(TargetType).ConvertFrom(stringValue);
             }
-            if (value != null) 
-                return TargetType.IsInstanceOfType(value) ? value : TypeDescriptor.GetConverter(TargetType).ConvertFrom(value);
+            if (value != null)
+                return TargetType.IsInstanceOfType(value)
+                    ? value
+                    : TypeDescriptor.GetConverter(TargetType).ConvertFrom(value);
             return value;
         }
         catch

@@ -15,7 +15,6 @@ public static class ObservableExtensions
 
     private class ActionObserver<T>(Action<T> onNext) : IObserver<T>
     {
-
         public void OnNext(T value)
         {
             onNext(value);

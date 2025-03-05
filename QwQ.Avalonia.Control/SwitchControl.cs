@@ -6,20 +6,20 @@ namespace QwQ.Avalonia.Control;
 
 public class SwitchControl : ContentControl
 {
-    public static readonly StyledProperty<bool> ConditionProperty =
-        AvaloniaProperty.Register<SwitchControl, bool>(
-            nameof(Condition),
-            defaultBindingMode: BindingMode.TwoWay);
+    public static readonly StyledProperty<bool> ConditionProperty = AvaloniaProperty.Register<
+        SwitchControl,
+        bool
+    >(nameof(Condition), defaultBindingMode: BindingMode.TwoWay);
 
-    public static readonly StyledProperty<object> TrueContentProperty =
-        AvaloniaProperty.Register<SwitchControl, object>(
-            nameof(TrueContent),
-            inherits: true); // 启用属性继承
+    public static readonly StyledProperty<object> TrueContentProperty = AvaloniaProperty.Register<
+        SwitchControl,
+        object
+    >(nameof(TrueContent), inherits: true); // 启用属性继承
 
-    public static readonly StyledProperty<object> FalseContentProperty =
-        AvaloniaProperty.Register<SwitchControl, object>(
-            nameof(FalseContent),
-            inherits: true); // 启用属性继承
+    public static readonly StyledProperty<object> FalseContentProperty = AvaloniaProperty.Register<
+        SwitchControl,
+        object
+    >(nameof(FalseContent), inherits: true); // 启用属性继承
 
     public SwitchControl()
     {

@@ -8,13 +8,13 @@ using Avalonia.Media;
 
 namespace QwQ.Avalonia.Control;
 
-public abstract class IndexControl : ItemsControl
+public class IndexControl : ItemsControl
 {
     // 定义依赖属性
-    public static readonly StyledProperty<int> IndexProperty =
-        AvaloniaProperty.Register<IndexControl, int>(
-            nameof(Index),
-            defaultBindingMode: BindingMode.TwoWay);
+    public static readonly StyledProperty<int> IndexProperty = AvaloniaProperty.Register<
+        IndexControl,
+        int
+    >(nameof(Index), defaultBindingMode: BindingMode.TwoWay);
 
     public static readonly StyledProperty<object?> DefaultContentProperty =
         AvaloniaProperty.Register<IndexControl, object?>(nameof(DefaultContent));
@@ -52,26 +52,32 @@ public abstract class IndexControl : ItemsControl
         base.OnApplyTemplate(e);
 
         // 查找模板中的 TransitioningContentControl
-        _transitioningContent = e.NameScope.Find<TransitioningContentControl>("PART_TransitioningContent");
+        _transitioningContent = e.NameScope.Find<TransitioningContentControl>(
+            "PART_TransitioningContent"
+        );
 
         // 绑定 PageTransition 属性
-        _transitioningContent?.Bind(TransitioningContentControl.PageTransitionProperty,
-            this.GetObservable(PageTransitionProperty));
+        _transitioningContent?.Bind(
+            TransitioningContentControl.PageTransitionProperty,
+            this.GetObservable(PageTransitionProperty)
+        );
 
         UpdateContent();
     }
 
     private void UpdateContent()
     {
-        if (_transitioningContent == null) return;
+        if (_transitioningContent == null)
+            return;
 
         var items = Items.Cast<object>().ToList();
         int targetIndex = Index;
 
         // 获取目标内容
-        object? newContent = targetIndex >= 0 && targetIndex < items.Count
-            ? items[targetIndex]
-            : DefaultContent ?? CreateDefaultFallback();
+        object? newContent =
+            targetIndex >= 0 && targetIndex < items.Count
+                ? items[targetIndex]
+                : DefaultContent ?? CreateDefaultFallback();
 
         // 更新内容
         _transitioningContent.Content = newContent;
