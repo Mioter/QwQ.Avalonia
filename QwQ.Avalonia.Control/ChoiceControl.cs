@@ -1,172 +1,237 @@
 using System.Collections.Specialized;
-using System.ComponentModel;
 using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
+using Avalonia.Data;
+using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Media;
 using QwQ.Avalonia.Helper;
 
 namespace QwQ.Avalonia.Control;
 
+/// <summary>
+/// 支持按名称选择内容的控件，提供类型安全的值匹配和切换动画
+/// </summary>
 public class ChoiceControl : ItemsControl
 {
-    // 定义 SelectName 附加属性
-    public static readonly AttachedProperty<object> SelectNameProperty =
-        AvaloniaProperty.RegisterAttached<ChoiceControl, AvaloniaObject, object>("SelectName");
+    //------------------------ 依赖属性定义 ------------------------//
 
-    // 定义 Selected 属性
-    public static readonly StyledProperty<object?> SelectedProperty = AvaloniaProperty.Register<
-        ChoiceControl,
-        object?
-    >(nameof(Selected));
+    /// <summary>
+    /// 定义 SelectName 附加属性（用于标记子项对应的选择键）
+    /// </summary>
+    public static readonly AttachedProperty<object?> SelectNameProperty =
+        AvaloniaProperty.RegisterAttached<ChoiceControl, AvaloniaObject, object?>(
+            "SelectName",
+            defaultBindingMode: BindingMode.OneWay);
 
-    // 定义 TargetType 属性
-    public static readonly StyledProperty<Type?> TargetTypeProperty = AvaloniaProperty.Register<
-        ChoiceControl,
-        Type?
-    >(nameof(TargetType));
+    /// <summary>
+    /// 当前选中的键值（与 SelectName 匹配）
+    /// </summary>
+    public static readonly StyledProperty<object?> SelectedProperty = 
+        AvaloniaProperty.Register<ChoiceControl, object?>(
+            nameof(Selected),
+            defaultBindingMode: BindingMode.TwoWay);
 
-    // 定义 PageTransition 属性
-    public static readonly StyledProperty<IPageTransition?> PageTransitionProperty =
+    /// <summary>
+    /// 目标值类型（用于类型转换校验）
+    /// </summary>
+    public static readonly StyledProperty<Type?> TargetTypeProperty = 
+        AvaloniaProperty.Register<ChoiceControl, Type?>(nameof(TargetType));
+
+    /// <summary>
+    /// 当未找到匹配目标显示的默认内容
+    /// </summary>
+    public static readonly StyledProperty<object?> DefaultContentProperty =
+        AvaloniaProperty.Register<IndexControl, object?>(nameof(DefaultContent));
+    
+    /// <summary>
+    /// 页面切换动画效果
+    /// </summary>
+    public static readonly StyledProperty<IPageTransition?> PageTransitionProperty = 
         AvaloniaProperty.Register<ChoiceControl, IPageTransition?>(nameof(PageTransition));
 
     private TransitioningContentControl? _transitioningContent;
-    private readonly Dictionary<AvaloniaObject, IDisposable> _subscriptions = new();
+    private readonly Dictionary<global::Avalonia.Controls.Control, IDisposable> _subscriptions = new();
 
+    //------------------------ 构造函数 ------------------------//
     public ChoiceControl()
     {
-        Items.CollectionChanged += OnChildrenCollectionChanged;
-        this.GetObservable(SelectedProperty).Subscribe(_ => UpdateChildrenVisibility());
+        // 监听子项集合变化
+        Items.CollectionChanged += OnItemsCollectionChanged;
+        // 监听 Selected 属性变化
+        this.GetObservable(SelectedProperty).Subscribe(_ => UpdateContent());
     }
 
+    //------------------------ 属性访问器 ------------------------//
+    /// <summary>
+    /// 当前选中的键值
+    /// </summary>
     public object? Selected
     {
         get => GetValue(SelectedProperty);
         set => SetValue(SelectedProperty, value);
     }
 
+    /// <summary>
+    /// 目标值类型（用于类型安全校验）
+    /// </summary>
     public Type? TargetType
     {
         get => GetValue(TargetTypeProperty);
         set => SetValue(TargetTypeProperty, value);
     }
 
+    /// <summary>
+    /// 获取或设置默认回退内容
+    /// </summary>
+    public object? DefaultContent
+    {
+        get => GetValue(DefaultContentProperty);
+        set => SetValue(DefaultContentProperty, value);
+    }
+
+    
+    /// <summary>
+    /// 页面切换动画
+    /// </summary>
     public IPageTransition? PageTransition
     {
         get => GetValue(PageTransitionProperty);
         set => SetValue(PageTransitionProperty, value);
     }
 
-    public static object GetSelectName(AvaloniaObject obj)
-    {
-        return obj.GetValue(SelectNameProperty);
-    }
+    //------------------------ 附加属性访问器 ------------------------//
+    public static object? GetSelectName(global::Avalonia.Controls.Control obj) => obj.GetValue(SelectNameProperty);
+    public static void SetSelectName(global::Avalonia.Controls.Control obj, object? value) => obj.SetValue(SelectNameProperty, value);
 
-    public static void SetSelectName(AvaloniaObject obj, object value)
-    {
-        obj.SetValue(SelectNameProperty, value);
-    }
-
+    //------------------------ 模板应用 ------------------------//
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
 
-        // 查找模板中的 TransitioningContentControl
-        _transitioningContent = e.NameScope.Find<TransitioningContentControl>(
-            "PART_TransitioningContent"
-        );
-
-        // 绑定 PageTransition 属性
+        // 获取切换动画容器
+        _transitioningContent = e.NameScope.Find<TransitioningContentControl>("PART_TransitioningContent");
+        
+        // 绑定动画属性
         _transitioningContent?.Bind(
             TransitioningContentControl.PageTransitionProperty,
             this.GetObservable(PageTransitionProperty)
         );
 
-        UpdateChildrenVisibility();
+        UpdateContent();
     }
 
-    private void OnChildrenCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    //------------------------ 核心逻辑 ------------------------//
+    private void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        // 处理新增子项
+        // 处理新增项
         if (e.NewItems != null)
         {
-            foreach (object? item in e.NewItems)
+            foreach (var item in e.NewItems.OfType<global::Avalonia.Controls.Control>())
             {
-                if (item is not AvaloniaObject avaloniaObj)
-                    continue;
-
-                var subscription = avaloniaObj
-                    .GetObservable(SelectNameProperty)
-                    .Subscribe(_ => UpdateChildrenVisibility());
-                _subscriptions[avaloniaObj] = subscription;
+                // 监听 SelectName 属性变化
+                var sub = item.GetObservable(SelectNameProperty)
+                    .Subscribe(_ => UpdateContent());
+                _subscriptions[item] = sub;
             }
         }
 
-        // 处理移除子项
+        // 处理移除项
         if (e.OldItems != null)
         {
-            foreach (object? item in e.OldItems)
+            foreach (var item in e.OldItems.OfType<global::Avalonia.Controls.Control>())
             {
-                if (
-                    item is not AvaloniaObject avaloniaObj
-                    || !_subscriptions.TryGetValue(avaloniaObj, out var sub)
-                )
-                    continue;
-
-                sub.Dispose();
-                _subscriptions.Remove(avaloniaObj);
+                if (_subscriptions.TryGetValue(item, out var sub))
+                {
+                    sub.Dispose();
+                    _subscriptions.Remove(item);
+                }
             }
         }
 
-        UpdateChildrenVisibility();
+        UpdateContent();
     }
 
-    private void UpdateChildrenVisibility()
+    /// <summary>
+    /// 更新显示内容（核心匹配逻辑）
+    /// </summary>
+    private void UpdateContent()
     {
-        if (_transitioningContent == null)
-            return;
+        if (_transitioningContent == null) return;
 
-        object? selected = ConvertValueToTargetType(Selected);
+        // 转换目标值类型
+        object? targetValue = SafeConvertValue(Selected, TargetType);
 
-        // 找到与 Selected 匹配的子项
-        foreach (object? item in Items)
+        // 遍历子项寻找匹配项
+        foreach (var item in Items.OfType<global::Avalonia.Controls.Control>())
         {
-            if (item is not AvaloniaObject avaloniaChild)
-                continue;
+            object? itemValue = SafeConvertValue(GetSelectName(item), TargetType);
 
-            object? name = ConvertValueToTargetType(GetSelectName(avaloniaChild));
-            if (!Equals(name, selected))
-                continue;
-            // 更新 TransitioningContentControl 的内容
+            if (!IsValueMatch(targetValue, itemValue)) continue;
             _transitioningContent.Content = item;
             return;
         }
 
-        // 如果没有匹配项，则清空内容
-        _transitioningContent.Content = null;
+        // 无匹配时提供默认内容
+        _transitioningContent.Content = DefaultContent ?? CreateDefaultFallback();
     }
 
-    private object? ConvertValueToTargetType(object? value)
+    //------------------------ 辅助方法 ------------------------//
+    /// <summary>
+    /// 安全类型转换方法（AOT 兼容）
+    /// </summary>
+    private static object? SafeConvertValue(object? value, Type? targetType)
     {
-        if (TargetType == null)
-            return value;
+        if (targetType == null || value == null) return value;
 
-        try
+        // 类型匹配直接返回
+        if (targetType.IsInstanceOfType(value)) return value;
+
+        // 字符串转换处理
+        if (value is string strValue)
         {
-            // 尝试将值转换为目标类型
-            if (value is string stringValue)
-            {
-                return TypeDescriptor.GetConverter(TargetType).ConvertFrom(stringValue);
-            }
-            if (value != null)
-                return TargetType.IsInstanceOfType(value)
-                    ? value
-                    : TypeDescriptor.GetConverter(TargetType).ConvertFrom(value);
-            return value;
+            if (targetType == typeof(int) && int.TryParse(strValue, out int intVal)) return intVal;
+            if (targetType == typeof(bool) && bool.TryParse(strValue, out bool boolVal)) return boolVal;
+            if(targetType == typeof(double) && double.TryParse(strValue, out double doubleVal)) return doubleVal;
+            if (targetType == typeof(decimal) && decimal.TryParse(strValue, out decimal decimalVal)) return decimalVal;
         }
-        catch
+
+        return value; // 无法转换时返回原值
+    }
+
+    /// <summary>
+    /// 值匹配逻辑（支持 null 比较）
+    /// </summary>
+    private static bool IsValueMatch(object? a, object? b)
+    {
+        if (a == null && b == null) return true;
+        if (a == null || b == null) return false;
+        return a.Equals(b);
+    }
+    
+    /// <summary>
+    /// 创建默认错误提示内容（AOT 兼容的静态实例）
+    /// </summary>
+    private static TextBlock CreateDefaultFallback() => new()
+    {
+        Text = "Invalid selection",
+        HorizontalAlignment = HorizontalAlignment.Center,
+        VerticalAlignment = VerticalAlignment.Center,
+        Foreground = Brushes.Red,
+    };
+
+    //------------------------ 清理资源 ------------------------//
+    protected override void OnUnloaded(RoutedEventArgs e)
+    {
+        // 清理所有订阅
+        foreach (var sub in _subscriptions.Values)
         {
-            return value; // 转换失败时返回原始值
+            sub.Dispose();
         }
+        _subscriptions.Clear();
+        
+        base.OnUnloaded(e);
     }
 }

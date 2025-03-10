@@ -1,0 +1,14 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             xmlns:vm="clr-namespace:Test.App.Models"
+             xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
+             x:DataType="vm:Test1PageModel"
+             x:Class="Test.App.Pages.Test1Page">
+    <control:ChoiceControl Selected="Name1" TargetType="x:String">
+        <Border Background="Aquamarine" control:ChoiceControl.SelectName="Name1"/>
+        <Border Background="Brown" control:ChoiceControl.SelectName="Name2"/>
+    </control:ChoiceControl>
+</UserControl>
