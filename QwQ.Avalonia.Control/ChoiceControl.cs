@@ -44,7 +44,7 @@ public class ChoiceControl : ItemsControl
     /// 当未找到匹配目标显示的默认内容
     /// </summary>
     public static readonly StyledProperty<object?> DefaultContentProperty =
-        AvaloniaProperty.Register<IndexControl, object?>(nameof(DefaultContent));
+        AvaloniaProperty.Register<ChoiceControl, object?>(nameof(DefaultContent));
     
     /// <summary>
     /// 页面切换动画效果
@@ -75,7 +75,7 @@ public class ChoiceControl : ItemsControl
     }
 
     /// <summary>
-    /// 目标值类型（用于类型安全校验）
+    /// 目标值类型（自动推断或手动指定）
     /// </summary>
     public Type? TargetType
     {
@@ -126,6 +126,8 @@ public class ChoiceControl : ItemsControl
     //------------------------ 核心逻辑 ------------------------//
     private void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        bool needsUpdate = false;
+        
         // 处理新增项
         if (e.NewItems != null)
         {
@@ -136,8 +138,9 @@ public class ChoiceControl : ItemsControl
                     .Subscribe(_ => UpdateContent());
                 _subscriptions[item] = sub;
             }
+            needsUpdate = true;
         }
-
+    
         // 处理移除项
         if (e.OldItems != null)
         {
@@ -149,9 +152,14 @@ public class ChoiceControl : ItemsControl
                     _subscriptions.Remove(item);
                 }
             }
+            needsUpdate = true;
         }
-
-        UpdateContent();
+    
+        // 只在必要时更新内容
+        if (needsUpdate)
+        {
+            UpdateContent();
+        }
     }
 
     /// <summary>
@@ -160,20 +168,23 @@ public class ChoiceControl : ItemsControl
     private void UpdateContent()
     {
         if (_transitioningContent == null) return;
-
+    
+        // 自动推断目标类型（如果未显式设置）
+        var effectiveTargetType = TargetType ?? Selected?.GetType();
+        
         // 转换目标值类型
-        object? targetValue = SafeConvertValue(Selected, TargetType);
-
+        object? targetValue = SafeConvertValue(Selected, effectiveTargetType);
+    
         // 遍历子项寻找匹配项
         foreach (var item in Items.OfType<global::Avalonia.Controls.Control>())
         {
-            object? itemValue = SafeConvertValue(GetSelectName(item), TargetType);
-
+            object? itemValue = SafeConvertValue(GetSelectName(item), effectiveTargetType);
+    
             if (!IsValueMatch(targetValue, itemValue)) continue;
             _transitioningContent.Content = item;
             return;
         }
-
+    
         // 无匹配时提供默认内容
         _transitioningContent.Content = DefaultContent ?? CreateDefaultFallback();
     }
@@ -185,19 +196,28 @@ public class ChoiceControl : ItemsControl
     private static object? SafeConvertValue(object? value, Type? targetType)
     {
         if (targetType == null || value == null) return value;
-
+    
         // 类型匹配直接返回
         if (targetType.IsInstanceOfType(value)) return value;
-
+    
         // 字符串转换处理
         if (value is string strValue)
         {
+            // 枚举类型处理
+            if (targetType.IsEnum && Enum.TryParse(targetType, strValue, true, out object? enumValue))
+                return enumValue;
+    
+            // 基础类型处理
             if (targetType == typeof(int) && int.TryParse(strValue, out int intVal)) return intVal;
-            if (targetType == typeof(bool) && bool.TryParse(strValue, out bool boolVal)) return boolVal;
-            if(targetType == typeof(double) && double.TryParse(strValue, out double doubleVal)) return doubleVal;
+            if (targetType == typeof(long) && long.TryParse(strValue, out long longVal)) return longVal;
+            if (targetType == typeof(float) && float.TryParse(strValue, out float floatVal)) return floatVal;
+            if (targetType == typeof(double) && double.TryParse(strValue, out double doubleVal)) return doubleVal;
             if (targetType == typeof(decimal) && decimal.TryParse(strValue, out decimal decimalVal)) return decimalVal;
+            if (targetType == typeof(bool) && bool.TryParse(strValue, out bool boolVal)) return boolVal;
+            if (targetType == typeof(Guid) && Guid.TryParse(strValue, out Guid guidVal)) return guidVal;
+            if (targetType == typeof(DateTime) && DateTime.TryParse(strValue, out DateTime dateVal)) return dateVal;
         }
-
+    
         return value; // 无法转换时返回原值
     }
 
