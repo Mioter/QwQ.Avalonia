@@ -146,11 +146,11 @@ public class ChoiceControl : ItemsControl
         {
             foreach (var item in e.OldItems.OfType<global::Avalonia.Controls.Control>())
             {
-                if (_subscriptions.TryGetValue(item, out var sub))
-                {
-                    sub.Dispose();
-                    _subscriptions.Remove(item);
-                }
+                if (!_subscriptions.TryGetValue(item, out var sub)) 
+                    continue;
+                
+                sub.Dispose();
+                _subscriptions.Remove(item);
             }
             needsUpdate = true;
         }
@@ -201,23 +201,23 @@ public class ChoiceControl : ItemsControl
         if (targetType.IsInstanceOfType(value)) return value;
     
         // 字符串转换处理
-        if (value is string strValue)
-        {
-            // 枚举类型处理
-            if (targetType.IsEnum && Enum.TryParse(targetType, strValue, true, out object? enumValue))
-                return enumValue;
+        if (value is not string strValue) 
+            return value; // 无法转换时返回原值
+        
+        // 枚举类型处理
+        if (targetType.IsEnum && Enum.TryParse(targetType, strValue, true, out object? enumValue))
+            return enumValue;
     
-            // 基础类型处理
-            if (targetType == typeof(int) && int.TryParse(strValue, out int intVal)) return intVal;
-            if (targetType == typeof(long) && long.TryParse(strValue, out long longVal)) return longVal;
-            if (targetType == typeof(float) && float.TryParse(strValue, out float floatVal)) return floatVal;
-            if (targetType == typeof(double) && double.TryParse(strValue, out double doubleVal)) return doubleVal;
-            if (targetType == typeof(decimal) && decimal.TryParse(strValue, out decimal decimalVal)) return decimalVal;
-            if (targetType == typeof(bool) && bool.TryParse(strValue, out bool boolVal)) return boolVal;
-            if (targetType == typeof(Guid) && Guid.TryParse(strValue, out Guid guidVal)) return guidVal;
-            if (targetType == typeof(DateTime) && DateTime.TryParse(strValue, out DateTime dateVal)) return dateVal;
-        }
-    
+        // 基础类型处理
+        if (targetType == typeof(int) && int.TryParse(strValue, out int intVal)) return intVal;
+        if (targetType == typeof(long) && long.TryParse(strValue, out long longVal)) return longVal;
+        if (targetType == typeof(float) && float.TryParse(strValue, out float floatVal)) return floatVal;
+        if (targetType == typeof(double) && double.TryParse(strValue, out double doubleVal)) return doubleVal;
+        if (targetType == typeof(decimal) && decimal.TryParse(strValue, out decimal decimalVal)) return decimalVal;
+        if (targetType == typeof(bool) && bool.TryParse(strValue, out bool boolVal)) return boolVal;
+        if (targetType == typeof(Guid) && Guid.TryParse(strValue, out Guid guidVal)) return guidVal;
+        if (targetType == typeof(DateTime) && DateTime.TryParse(strValue, out DateTime dateVal)) return dateVal;
+
         return value; // 无法转换时返回原值
     }
 

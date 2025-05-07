@@ -1,5 +1,7 @@
 using Avalonia;
+using Avalonia.Animation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Data;
 
 namespace QwQ.Avalonia.Control;
@@ -36,6 +38,14 @@ public class SwitchControl : ContentControl
         AvaloniaProperty.Register<SwitchControl, object?>(
             nameof(FalseContent),
             inherits: true);
+            
+    /// <summary>
+    /// 页面切换动画效果
+    /// </summary>
+    public static readonly StyledProperty<IPageTransition?> PageTransitionProperty =
+        AvaloniaProperty.Register<SwitchControl, IPageTransition?>(nameof(PageTransition));
+    
+    private TransitioningContentControl? _transitioningContent;
     
     //------------------------ 构造函数 ------------------------//
     public SwitchControl()
@@ -77,7 +87,33 @@ public class SwitchControl : ContentControl
         get => GetValue(FalseContentProperty);
         set => SetValue(FalseContentProperty, value);
     }
+    
+    /// <summary>
+    /// 页面切换动画
+    /// </summary>
+    public IPageTransition? PageTransition
+    {
+        get => GetValue(PageTransitionProperty);
+        set => SetValue(PageTransitionProperty, value);
+    }
 
+    //------------------------ 模板应用 ------------------------//
+    protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
+    {
+        base.OnApplyTemplate(e);
+
+        // 从模板中获取切换动画容器
+        _transitioningContent = e.NameScope.Find<TransitioningContentControl>("PART_TransitioningContent");
+
+        // 绑定页面切换动画属性
+        _transitioningContent?.Bind(
+            TransitioningContentControl.PageTransitionProperty,
+            this.GetObservable(PageTransitionProperty)
+        );
+
+        UpdateContent();
+    }
+    
     //------------------------ 核心逻辑 ------------------------//
 
     /// <summary>
@@ -85,7 +121,20 @@ public class SwitchControl : ContentControl
     /// </summary>
     private void UpdateContent()
     {
-        // 通过 Avalonia 属性系统自动处理继承
-        Content =  Condition ? TrueContent : FalseContent;
+        if (_transitioningContent == null)
+        {
+            // 直接更新内容（无动画）
+            Content = Condition ? TrueContent : FalseContent;
+            return;
+        }
+        
+        // 通过 TransitioningContentControl 实现动画切换
+        object? newContent = Condition ? TrueContent : FalseContent;
+        
+        // 仅当内容实际变化时才触发动画
+        if (!Equals(_transitioningContent.Content, newContent))
+        {
+            _transitioningContent.Content = newContent;
+        }
     }
 }

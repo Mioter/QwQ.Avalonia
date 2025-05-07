@@ -21,31 +21,66 @@
         <vm:MainWindowViewModel />
     </Design.DataContext>
 
-    <!--  播放模式  -->
-    <Button
-        Command="{Binding TogglePlayModeCommand}"
-        Foreground="{DynamicResource TextBlockDefaultForeground}"
-        HorizontalAlignment="Center"
-        VerticalAlignment="Center">
-        <control:ChoiceControl Selected="{Binding PlayMode}" TargetType="{x:Type enums:PlayMode}">
-            <PathIcon
-                Data="{StaticResource Sequential}"
-                Height="14"
-                Margin="5"
-                control:ChoiceControl.SelectName="Sequential" />
+    <WrapPanel>
 
-            <PathIcon
-                Data="{StaticResource Random}"
-                Height="14"
-                Margin="5"
-                control:ChoiceControl.SelectName="Random" />
+        <!--  播放模式  -->
+        <Button
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            Command="{Binding TogglePlayModeCommand}"
+            Foreground="{DynamicResource TextBlockDefaultForeground}">
+            <control:ChoiceControl Selected="{Binding PlayMode}" TargetType="{x:Type enums:PlayMode}">
 
-            <PathIcon
-                Data="{StaticResource SingleLoop}"
-                Height="14"
-                Margin="5"
-                control:ChoiceControl.SelectName="SingleLoop" />
-        </control:ChoiceControl>
-    </Button>
+                <control:ChoiceControl.PageTransition>
+                    <CompositePageTransition>
+                        <CrossFade Duration="0:0:0.5" />
+                        <PageSlide
+                            Duration="0:0:0.3"
+                            Orientation="Horizontal"
+                            SlideInEasing="QuadraticEaseIn"
+                            SlideOutEasing="QuadraticEaseOut" />
+                    </CompositePageTransition>
+                </control:ChoiceControl.PageTransition>
 
+
+                <PathIcon
+                    Data="{StaticResource Sequential}"
+                    Height="14"
+                    Margin="5"
+                    control:ChoiceControl.SelectName="Sequential" />
+
+                <PathIcon
+                    Data="{StaticResource Random}"
+                    Height="14"
+                    Margin="5"
+                    control:ChoiceControl.SelectName="Random" />
+
+                <PathIcon
+                    Data="{StaticResource SingleLoop}"
+                    Height="14"
+                    Margin="5"
+                    control:ChoiceControl.SelectName="SingleLoop" />
+            </control:ChoiceControl>
+        </Button>
+
+        <Button HorizontalAlignment="Stretch"
+                VerticalAlignment="Stretch" Command="{Binding TogglePlayingCommand}">
+            <control:SwitchControl Condition="{Binding IsPlaying}" TrueContent="B" FalseContent="A">
+
+                <control:SwitchControl.PageTransition>
+                    <CompositePageTransition>
+                        <CrossFade Duration="0:0:0.5" />
+                        <PageSlide
+                            Duration="0:0:0.3"
+                            Orientation="Vertical"
+                            SlideInEasing="QuadraticEaseIn"
+                            SlideOutEasing="QuadraticEaseOut" />
+                    </CompositePageTransition>
+                </control:SwitchControl.PageTransition>
+
+
+            </control:SwitchControl>
+        </Button>
+
+    </WrapPanel>
 </Window>
