@@ -1,0 +1,28 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:controls="using:QwQ.Avalonia.Control"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Sample.ImageCropperSample">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="10">
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="10" Margin="0,0,0,10">
+            <Button Name="OpenImageButton" Content="打开图片"/>
+            <Button Name="SaveImageButton" Content="保存裁剪图片" IsEnabled="False"/>
+            <ComboBox Name="AspectRatioComboBox" Width="120" SelectedIndex="0">
+                <ComboBoxItem Content="1:1"/>
+                <ComboBoxItem Content="4:3"/>
+                <ComboBoxItem Content="16:9"/>
+                <ComboBoxItem Content="自由比例"/>
+            </ComboBox>
+        </StackPanel>
+        
+        <controls:ImageCropperControl x:Name="ImageCropper" 
+                                     Grid.Row="1"/>
+        
+        <TextBlock Grid.Row="2" 
+                   Text="提示：拖动裁剪框可以调整裁剪区域" 
+                   HorizontalAlignment="Center"
+                   Margin="0,10,0,0"/>
+    </Grid>
+</UserControl> 

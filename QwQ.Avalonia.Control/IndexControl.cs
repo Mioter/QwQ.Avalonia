@@ -19,10 +19,10 @@ public class IndexControl : ItemsControl
     /// <summary>
     /// 当前显示的内容索引（双向绑定）
     /// </summary>
-    public static readonly StyledProperty<int> IndexProperty =
-        AvaloniaProperty.Register<IndexControl, int>(
-            nameof(Index),
-            defaultBindingMode: BindingMode.TwoWay);
+    public static readonly StyledProperty<int> IndexProperty = AvaloniaProperty.Register<
+        IndexControl,
+        int
+    >(nameof(Index), defaultBindingMode: BindingMode.TwoWay);
 
     /// <summary>
     /// 当索引无效时显示的默认内容
@@ -79,7 +79,9 @@ public class IndexControl : ItemsControl
         base.OnApplyTemplate(e);
 
         // 从模板中获取切换动画容器
-        _transitioningContent = e.NameScope.Find<TransitioningContentControl>("PART_TransitioningContent");
+        _transitioningContent = e.NameScope.Find<TransitioningContentControl>(
+            "PART_TransitioningContent"
+        );
 
         // 绑定页面切换动画属性
         _transitioningContent?.Bind(
@@ -93,7 +95,8 @@ public class IndexControl : ItemsControl
     //------------------------ 核心逻辑 ------------------------//
     private void UpdateContent()
     {
-        if (_transitioningContent == null) return;
+        if (_transitioningContent == null)
+            return;
 
         // 获取数据项集合（可使用 ItemsSource 绑定数据模型）
         var items = Items.Cast<object>().ToList();
@@ -119,11 +122,12 @@ public class IndexControl : ItemsControl
     /// <summary>
     /// 创建默认错误提示内容（AOT 兼容的静态实例）
     /// </summary>
-    private static TextBlock CreateDefaultFallback() => new()
-    {
-        Text = "Invalid selection",
-        HorizontalAlignment = HorizontalAlignment.Center,
-        VerticalAlignment = VerticalAlignment.Center,
-        Foreground = Brushes.Red,
-    };
+    private static TextBlock CreateDefaultFallback() =>
+        new()
+        {
+            Text = "Invalid selection",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = Brushes.Red,
+        };
 }

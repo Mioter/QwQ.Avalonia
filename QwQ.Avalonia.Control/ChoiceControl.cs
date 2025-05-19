@@ -24,36 +24,40 @@ public class ChoiceControl : ItemsControl
     public static readonly AttachedProperty<object?> SelectNameProperty =
         AvaloniaProperty.RegisterAttached<ChoiceControl, AvaloniaObject, object?>(
             "SelectName",
-            defaultBindingMode: BindingMode.OneWay);
+            defaultBindingMode: BindingMode.OneWay
+        );
 
     /// <summary>
     /// 当前选中的键值（与 SelectName 匹配）
     /// </summary>
-    public static readonly StyledProperty<object?> SelectedProperty = 
-        AvaloniaProperty.Register<ChoiceControl, object?>(
-            nameof(Selected),
-            defaultBindingMode: BindingMode.TwoWay);
+    public static readonly StyledProperty<object?> SelectedProperty = AvaloniaProperty.Register<
+        ChoiceControl,
+        object?
+    >(nameof(Selected), defaultBindingMode: BindingMode.TwoWay);
 
     /// <summary>
     /// 目标值类型（用于类型转换校验）
     /// </summary>
-    public static readonly StyledProperty<Type?> TargetTypeProperty = 
-        AvaloniaProperty.Register<ChoiceControl, Type?>(nameof(TargetType));
+    public static readonly StyledProperty<Type?> TargetTypeProperty = AvaloniaProperty.Register<
+        ChoiceControl,
+        Type?
+    >(nameof(TargetType));
 
     /// <summary>
     /// 当未找到匹配目标显示的默认内容
     /// </summary>
     public static readonly StyledProperty<object?> DefaultContentProperty =
         AvaloniaProperty.Register<ChoiceControl, object?>(nameof(DefaultContent));
-    
+
     /// <summary>
     /// 页面切换动画效果
     /// </summary>
-    public static readonly StyledProperty<IPageTransition?> PageTransitionProperty = 
+    public static readonly StyledProperty<IPageTransition?> PageTransitionProperty =
         AvaloniaProperty.Register<ChoiceControl, IPageTransition?>(nameof(PageTransition));
 
     private TransitioningContentControl? _transitioningContent;
-    private readonly Dictionary<global::Avalonia.Controls.Control, IDisposable> _subscriptions = new();
+    private readonly Dictionary<global::Avalonia.Controls.Control, IDisposable> _subscriptions =
+        new();
 
     //------------------------ 构造函数 ------------------------//
     public ChoiceControl()
@@ -92,7 +96,6 @@ public class ChoiceControl : ItemsControl
         set => SetValue(DefaultContentProperty, value);
     }
 
-    
     /// <summary>
     /// 页面切换动画
     /// </summary>
@@ -103,8 +106,11 @@ public class ChoiceControl : ItemsControl
     }
 
     //------------------------ 附加属性访问器 ------------------------//
-    public static object? GetSelectName(global::Avalonia.Controls.Control obj) => obj.GetValue(SelectNameProperty);
-    public static void SetSelectName(global::Avalonia.Controls.Control obj, object? value) => obj.SetValue(SelectNameProperty, value);
+    public static object? GetSelectName(global::Avalonia.Controls.Control obj) =>
+        obj.GetValue(SelectNameProperty);
+
+    public static void SetSelectName(global::Avalonia.Controls.Control obj, object? value) =>
+        obj.SetValue(SelectNameProperty, value);
 
     //------------------------ 模板应用 ------------------------//
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
@@ -112,8 +118,10 @@ public class ChoiceControl : ItemsControl
         base.OnApplyTemplate(e);
 
         // 获取切换动画容器
-        _transitioningContent = e.NameScope.Find<TransitioningContentControl>("PART_TransitioningContent");
-        
+        _transitioningContent = e.NameScope.Find<TransitioningContentControl>(
+            "PART_TransitioningContent"
+        );
+
         // 绑定动画属性
         _transitioningContent?.Bind(
             TransitioningContentControl.PageTransitionProperty,
@@ -127,34 +135,33 @@ public class ChoiceControl : ItemsControl
     private void OnItemsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
         bool needsUpdate = false;
-        
+
         // 处理新增项
         if (e.NewItems != null)
         {
             foreach (var item in e.NewItems.OfType<global::Avalonia.Controls.Control>())
             {
                 // 监听 SelectName 属性变化
-                var sub = item.GetObservable(SelectNameProperty)
-                    .Subscribe(_ => UpdateContent());
+                var sub = item.GetObservable(SelectNameProperty).Subscribe(_ => UpdateContent());
                 _subscriptions[item] = sub;
             }
             needsUpdate = true;
         }
-    
+
         // 处理移除项
         if (e.OldItems != null)
         {
             foreach (var item in e.OldItems.OfType<global::Avalonia.Controls.Control>())
             {
-                if (!_subscriptions.TryGetValue(item, out var sub)) 
+                if (!_subscriptions.TryGetValue(item, out var sub))
                     continue;
-                
+
                 sub.Dispose();
                 _subscriptions.Remove(item);
             }
             needsUpdate = true;
         }
-    
+
         // 只在必要时更新内容
         if (needsUpdate)
         {
@@ -167,24 +174,26 @@ public class ChoiceControl : ItemsControl
     /// </summary>
     private void UpdateContent()
     {
-        if (_transitioningContent == null) return;
-    
+        if (_transitioningContent == null)
+            return;
+
         // 自动推断目标类型（如果未显式设置）
         var effectiveTargetType = TargetType ?? Selected?.GetType();
-        
+
         // 转换目标值类型
         object? targetValue = SafeConvertValue(Selected, effectiveTargetType);
-    
+
         // 遍历子项寻找匹配项
         foreach (var item in Items.OfType<global::Avalonia.Controls.Control>())
         {
             object? itemValue = SafeConvertValue(GetSelectName(item), effectiveTargetType);
-    
-            if (!IsValueMatch(targetValue, itemValue)) continue;
+
+            if (!IsValueMatch(targetValue, itemValue))
+                continue;
             _transitioningContent.Content = item;
             return;
         }
-    
+
         // 无匹配时提供默认内容
         _transitioningContent.Content = DefaultContent ?? CreateDefaultFallback();
     }
@@ -195,28 +204,38 @@ public class ChoiceControl : ItemsControl
     /// </summary>
     private static object? SafeConvertValue(object? value, Type? targetType)
     {
-        if (targetType == null || value == null) return value;
-    
+        if (targetType == null || value == null)
+            return value;
+
         // 类型匹配直接返回
-        if (targetType.IsInstanceOfType(value)) return value;
-    
+        if (targetType.IsInstanceOfType(value))
+            return value;
+
         // 字符串转换处理
-        if (value is not string strValue) 
+        if (value is not string strValue)
             return value; // 无法转换时返回原值
-        
+
         // 枚举类型处理
         if (targetType.IsEnum && Enum.TryParse(targetType, strValue, true, out object? enumValue))
             return enumValue;
-    
+
         // 基础类型处理
-        if (targetType == typeof(int) && int.TryParse(strValue, out int intVal)) return intVal;
-        if (targetType == typeof(long) && long.TryParse(strValue, out long longVal)) return longVal;
-        if (targetType == typeof(float) && float.TryParse(strValue, out float floatVal)) return floatVal;
-        if (targetType == typeof(double) && double.TryParse(strValue, out double doubleVal)) return doubleVal;
-        if (targetType == typeof(decimal) && decimal.TryParse(strValue, out decimal decimalVal)) return decimalVal;
-        if (targetType == typeof(bool) && bool.TryParse(strValue, out bool boolVal)) return boolVal;
-        if (targetType == typeof(Guid) && Guid.TryParse(strValue, out Guid guidVal)) return guidVal;
-        if (targetType == typeof(DateTime) && DateTime.TryParse(strValue, out DateTime dateVal)) return dateVal;
+        if (targetType == typeof(int) && int.TryParse(strValue, out int intVal))
+            return intVal;
+        if (targetType == typeof(long) && long.TryParse(strValue, out long longVal))
+            return longVal;
+        if (targetType == typeof(float) && float.TryParse(strValue, out float floatVal))
+            return floatVal;
+        if (targetType == typeof(double) && double.TryParse(strValue, out double doubleVal))
+            return doubleVal;
+        if (targetType == typeof(decimal) && decimal.TryParse(strValue, out decimal decimalVal))
+            return decimalVal;
+        if (targetType == typeof(bool) && bool.TryParse(strValue, out bool boolVal))
+            return boolVal;
+        if (targetType == typeof(Guid) && Guid.TryParse(strValue, out Guid guidVal))
+            return guidVal;
+        if (targetType == typeof(DateTime) && DateTime.TryParse(strValue, out DateTime dateVal))
+            return dateVal;
 
         return value; // 无法转换时返回原值
     }
@@ -226,21 +245,24 @@ public class ChoiceControl : ItemsControl
     /// </summary>
     private static bool IsValueMatch(object? a, object? b)
     {
-        if (a == null && b == null) return true;
-        if (a == null || b == null) return false;
+        if (a == null && b == null)
+            return true;
+        if (a == null || b == null)
+            return false;
         return a.Equals(b);
     }
-    
+
     /// <summary>
     /// 创建默认错误提示内容（AOT 兼容的静态实例）
     /// </summary>
-    private static TextBlock CreateDefaultFallback() => new()
-    {
-        Text = "Invalid selection",
-        HorizontalAlignment = HorizontalAlignment.Center,
-        VerticalAlignment = VerticalAlignment.Center,
-        Foreground = Brushes.Red,
-    };
+    private static TextBlock CreateDefaultFallback() =>
+        new()
+        {
+            Text = "Invalid selection",
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Foreground = Brushes.Red,
+        };
 
     //------------------------ 清理资源 ------------------------//
     protected override void OnUnloaded(RoutedEventArgs e)
@@ -251,7 +273,7 @@ public class ChoiceControl : ItemsControl
             sub.Dispose();
         }
         _subscriptions.Clear();
-        
+
         base.OnUnloaded(e);
     }
 }

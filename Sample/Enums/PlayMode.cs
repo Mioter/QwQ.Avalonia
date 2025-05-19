@@ -9,12 +9,12 @@ public enum PlayMode
     /// 顺序播放
     /// </summary>
     Sequential,
-    
+
     /// <summary>
     /// 随机播放
     /// </summary>
     Random,
-    
+
     /// <summary>
     /// 单曲循环
     /// </summary>

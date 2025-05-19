@@ -6,7 +6,6 @@ namespace Sample.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
-
     [RelayCommand]
     private void TogglePlayMode()
     {
@@ -20,7 +19,9 @@ public partial class MainWindowViewModel : ViewModelBase
         IsPlaying = !IsPlaying;
     }
 
-    [ObservableProperty] public partial PlayMode PlayMode { get; set; } = PlayMode.Sequential;
-    
-    [ObservableProperty] public partial bool IsPlaying { get; set; }
+    [ObservableProperty]
+    public partial PlayMode PlayMode { get; set; } = PlayMode.Sequential;
+
+    [ObservableProperty]
+    public partial bool IsPlaying { get; set; }
 }
