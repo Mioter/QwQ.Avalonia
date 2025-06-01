@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         
         <PackageId>QwQ.Avalonia.Control</PackageId>
-        <Version>0.1.4-fix1</Version>
+        <Version>0.1.5</Version>
         <Authors>Mioter</Authors>
         <Description>提供了一些简单的Avalonia自定义控件以及相关辅助类。自己用的，没啦！QwQ</Description>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
