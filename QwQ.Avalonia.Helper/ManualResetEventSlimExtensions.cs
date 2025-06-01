@@ -1,6 +1,5 @@
 namespace QwQ.Avalonia.Helper;
 
-
 /// <summary>
 /// 为 ManualResetEventSlim 提供异步等待扩展方法
 /// </summary>
@@ -12,7 +11,10 @@ public static class ManualResetEventSlimExtensions
     /// <param name="manualResetEvent">要等待的事件</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>表示异步等待的任务</returns>
-    public static Task WaitOneAsync(this ManualResetEventSlim manualResetEvent, CancellationToken cancellationToken = default)
+    public static Task WaitOneAsync(
+        this ManualResetEventSlim manualResetEvent,
+        CancellationToken cancellationToken = default
+    )
     {
         return WaitOneAsync(manualResetEvent.WaitHandle, cancellationToken);
     }
@@ -23,7 +25,10 @@ public static class ManualResetEventSlimExtensions
     /// <param name="waitHandle">要等待的句柄</param>
     /// <param name="cancellationToken">取消令牌</param>
     /// <returns>表示异步等待的任务</returns>
-    public static Task WaitOneAsync(this WaitHandle waitHandle, CancellationToken cancellationToken = default)
+    public static Task WaitOneAsync(
+        this WaitHandle waitHandle,
+        CancellationToken cancellationToken = default
+    )
     {
         ArgumentNullException.ThrowIfNull(waitHandle);
 
@@ -41,7 +46,8 @@ public static class ManualResetEventSlimExtensions
             (state, _) => (state as TaskCompletionSource<bool>)?.TrySetResult(true),
             tcs,
             Timeout.InfiniteTimeSpan,
-            true);
+            true
+        );
 
         var cancellationTokenRegistration = default(CancellationTokenRegistration);
 
@@ -54,13 +60,15 @@ public static class ManualResetEventSlimExtensions
             });
         }
 
-        tcs.Task.ContinueWith(_ =>
-        {
-            rwh.Unregister(null);
-            cancellationTokenRegistration.Dispose();
-        }, TaskContinuationOptions.ExecuteSynchronously);
+        tcs.Task.ContinueWith(
+            _ =>
+            {
+                rwh.Unregister(null);
+                cancellationTokenRegistration.Dispose();
+            },
+            TaskContinuationOptions.ExecuteSynchronously
+        );
 
         return tcs.Task;
     }
 }
-

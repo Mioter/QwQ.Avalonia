@@ -13,7 +13,7 @@ public class TaskController : IDisposable
     /// 获取取消令牌
     /// </summary>
     public CancellationToken CancellationToken => _cancellationTokenSource.Token;
-    
+
     /// <summary>
     /// 获取暂停事件
     /// </summary>
@@ -39,32 +39,32 @@ public class TaskController : IDisposable
     /// 任务当前状态
     /// </summary>
     public TaskExecutionState State => _state;
-    
+
     /// <summary>
     /// 任务是否已完成
     /// </summary>
     public bool IsCompleted => State == TaskExecutionState.Completed;
-    
+
     /// <summary>
     /// 任务是否已取消
     /// </summary>
     public bool IsCancelled => State == TaskExecutionState.Cancelled;
-    
+
     /// <summary>
     /// 任务是否正在运行
     /// </summary>
     public bool IsRunning => State == TaskExecutionState.Running;
-    
+
     /// <summary>
     /// 任务是否已暂停
     /// </summary>
     public bool IsPaused => State == TaskExecutionState.Paused;
-    
+
     /// <summary>
     /// 任务是否已停止
     /// </summary>
     public bool IsStopped => State == TaskExecutionState.Stopped;
-    
+
     /// <summary>
     /// 启动或恢复任务
     /// </summary>
@@ -112,7 +112,7 @@ public class TaskController : IDisposable
             _stateLock.Release();
         }
     }
-    
+
     /// <summary>
     /// 停止任务
     /// </summary>
@@ -137,7 +137,7 @@ public class TaskController : IDisposable
             _stateLock.Release();
         }
     }
-    
+
     /// <summary>
     /// 取消任务
     /// </summary>
@@ -162,25 +162,25 @@ public class TaskController : IDisposable
             _stateLock.Release();
         }
     }
-    
+
     /// <summary>
     /// 设置任务状态为完成
     /// </summary>
     /// <returns>表示异步操作的任务</returns>
     internal async Task SetCompletedAsync() => await SetStateAsync(TaskExecutionState.Completed);
-    
+
     /// <summary>
     /// 设置任务状态为错误
     /// </summary>
     /// <returns>表示异步操作的任务</returns>
     internal async Task SetErrorAsync() => await SetStateAsync(TaskExecutionState.Error);
-    
+
     /// <summary>
     /// 设置任务状态为超时
     /// </summary>
     /// <returns>表示异步操作的任务</returns>
     internal async Task SetTimeoutAsync() => await SetStateAsync(TaskExecutionState.Timeout);
-    
+
     /// <summary>
     /// 异步设置任务状态
     /// </summary>
@@ -196,7 +196,7 @@ public class TaskController : IDisposable
             _stateLock.Release();
         }
     }
-    
+
     /// <summary>
     /// 释放资源
     /// </summary>
@@ -208,7 +208,7 @@ public class TaskController : IDisposable
         _stateLock.Dispose();
         PauseEvent.Dispose();
         _cancellationTokenSource.Dispose();
-        
+
         GC.SuppressFinalize(this);
     }
 }

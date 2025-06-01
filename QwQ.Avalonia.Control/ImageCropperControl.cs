@@ -574,7 +574,7 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
 
             if (_sourceImage == null || !_isControlSizeValid)
                 return;
-            
+
             // 重新计算裁剪框
             _cropRect = CalculateInitialCropRect();
 
@@ -785,9 +785,9 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
-        if (!_isDragging && !_isResizing) 
+        if (!_isDragging && !_isResizing)
             return;
-        
+
         _isDragging = false;
         _isResizing = false;
         _activeHandle = ResizeHandle.None;

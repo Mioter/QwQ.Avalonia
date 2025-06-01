@@ -44,7 +44,7 @@ public class TaskBuilder<TResult>
     {
         if (delay < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(delay), "Delay time cannot be negative");
-            
+
         _delay = delay;
         return this;
     }
@@ -66,11 +66,17 @@ public class TaskBuilder<TResult>
     /// <param name="timeoutHandler">超时处理程序，在任务超时时调用，参数为任务已执行的时间</param>
     /// <returns>当前构建器实例，用于链式调用</returns>
     /// <exception cref="ArgumentOutOfRangeException">当超时时间为负数或零时抛出</exception>
-    public TaskBuilder<TResult> SetTimeout(TimeSpan timeout, Action<TimeSpan>? timeoutHandler = null)
+    public TaskBuilder<TResult> SetTimeout(
+        TimeSpan timeout,
+        Action<TimeSpan>? timeoutHandler = null
+    )
     {
         if (timeout <= TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero");
-            
+            throw new ArgumentOutOfRangeException(
+                nameof(timeout),
+                "Timeout must be greater than zero"
+            );
+
         _timeout = timeout;
         _timeoutHandler = timeoutHandler;
         return this;
@@ -82,7 +88,10 @@ public class TaskBuilder<TResult>
     /// <param name="timeoutMilliseconds">超时毫秒数</param>
     /// <param name="timeoutHandler">超时处理程序，在任务超时时调用</param>
     /// <returns>当前构建器实例，用于链式调用</returns>
-    public TaskBuilder<TResult> SetTimeout(int timeoutMilliseconds, Action<TimeSpan>? timeoutHandler = null)
+    public TaskBuilder<TResult> SetTimeout(
+        int timeoutMilliseconds,
+        Action<TimeSpan>? timeoutHandler = null
+    )
     {
         return SetTimeout(TimeSpan.FromMilliseconds(timeoutMilliseconds), timeoutHandler);
     }
@@ -96,7 +105,7 @@ public class TaskBuilder<TResult>
     public TaskBuilder<TResult> SetController(TaskController controller)
     {
         ArgumentNullException.ThrowIfNull(controller);
-        
+
         _controller = controller;
         return this;
     }
@@ -110,7 +119,7 @@ public class TaskBuilder<TResult>
     public TaskBuilder<TResult> SetErrorHandler(Action<Exception> errorHandler)
     {
         ArgumentNullException.ThrowIfNull(errorHandler);
-        
+
         _errorHandler = errorHandler;
         return this;
     }
@@ -124,7 +133,7 @@ public class TaskBuilder<TResult>
     public TaskBuilder<TResult> SetCompleteCallback(Action<TResult> completeCallback)
     {
         ArgumentNullException.ThrowIfNull(completeCallback);
-        
+
         _completeCallback = completeCallback;
         return this;
     }
@@ -139,7 +148,7 @@ public class TaskBuilder<TResult>
         _priority = priority;
         return this;
     }
-    
+
     /// <summary>
     /// 设置进度报告器，用于报告任务执行进度
     /// </summary>
@@ -178,7 +187,7 @@ public class TaskBuilder<TResult>
 
             // 启动任务
             await controller.StartAsync();
-            
+
             // 报告初始进度
             _progress?.Report(0.0);
 
@@ -189,8 +198,11 @@ public class TaskBuilder<TResult>
             if (_timeout.HasValue)
             {
                 using var timeoutCts = new CancellationTokenSource(_timeout.Value);
-                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(controller.CancellationToken, timeoutCts.Token);
-                
+                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
+                    controller.CancellationToken,
+                    timeoutCts.Token
+                );
+
                 try
                 {
                     var result = await mainTask.WaitAsync(linkedCts.Token);
@@ -198,7 +210,7 @@ public class TaskBuilder<TResult>
 
                     // 报告完成进度
                     _progress?.Report(1.0);
-                    
+
                     // 执行完成回调
                     if (result.IsSuccess && result.Result != null)
                     {
@@ -221,7 +233,7 @@ public class TaskBuilder<TResult>
 
                 // 报告完成进度
                 _progress?.Report(1.0);
-                
+
                 // 执行完成回调
                 if (result.IsSuccess && result.Result != null)
                 {
@@ -239,7 +251,11 @@ public class TaskBuilder<TResult>
         {
             await controller.SetErrorAsync();
             _errorHandler?.Invoke(ex);
-            return TaskExecutionResult<TResult>.Failure(ex, TaskExecutionState.Error, stopwatch.Elapsed);
+            return TaskExecutionResult<TResult>.Failure(
+                ex,
+                TaskExecutionState.Error,
+                stopwatch.Elapsed
+            );
         }
         finally
         {
@@ -279,7 +295,10 @@ public class TaskBuilder<TResult>
             TResult result;
             if (_isBackground)
             {
-                result = await Task.Run(() => _work(controller.CancellationToken), controller.CancellationToken);
+                result = await Task.Run(
+                    () => _work(controller.CancellationToken),
+                    controller.CancellationToken
+                );
             }
             else
             {
@@ -298,7 +317,11 @@ public class TaskBuilder<TResult>
         catch (Exception ex)
         {
             stopwatch.Stop();
-            return TaskExecutionResult<TResult>.Failure(ex, TaskExecutionState.Error, stopwatch.Elapsed);
+            return TaskExecutionResult<TResult>.Failure(
+                ex,
+                TaskExecutionState.Error,
+                stopwatch.Elapsed
+            );
         }
     }
 }

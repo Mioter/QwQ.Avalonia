@@ -39,14 +39,15 @@ public class MultiTaskBuilder<TItem, TResult>
         IEnumerable<TItem> items,
         Func<TItem, Task<TResult>> itemWork,
         bool isParallel,
-        bool isBackground)
+        bool isBackground
+    )
     {
         _items = items;
         _itemWork = (item, _) => itemWork(item);
         _isParallel = isParallel;
         _isBackground = isBackground;
     }
-    
+
     /// <summary>
     /// 初始化多项目任务构建器（支持取消令牌）
     /// </summary>
@@ -58,7 +59,8 @@ public class MultiTaskBuilder<TItem, TResult>
         IEnumerable<TItem> items,
         Func<TItem, CancellationToken, Task<TResult>> itemWork,
         bool isParallel,
-        bool isBackground)
+        bool isBackground
+    )
     {
         _items = items;
         _itemWork = itemWork;
@@ -76,7 +78,7 @@ public class MultiTaskBuilder<TItem, TResult>
     {
         if (delay < TimeSpan.Zero)
             throw new ArgumentOutOfRangeException(nameof(delay), "Delay time cannot be negative");
-            
+
         _delay = delay;
         return this;
     }
@@ -98,11 +100,17 @@ public class MultiTaskBuilder<TItem, TResult>
     /// <param name="timeoutHandler">超时处理程序，在任务超时时调用，参数为任务已执行的时间</param>
     /// <returns>当前构建器实例，用于链式调用</returns>
     /// <exception cref="ArgumentOutOfRangeException">当超时时间为负数或零时抛出</exception>
-    public MultiTaskBuilder<TItem, TResult> SetTimeout(TimeSpan timeout, Action<TimeSpan>? timeoutHandler = null)
+    public MultiTaskBuilder<TItem, TResult> SetTimeout(
+        TimeSpan timeout,
+        Action<TimeSpan>? timeoutHandler = null
+    )
     {
         if (timeout <= TimeSpan.Zero)
-            throw new ArgumentOutOfRangeException(nameof(timeout), "Timeout must be greater than zero");
-            
+            throw new ArgumentOutOfRangeException(
+                nameof(timeout),
+                "Timeout must be greater than zero"
+            );
+
         _timeout = timeout;
         _timeoutHandler = timeoutHandler;
         return this;
@@ -114,7 +122,10 @@ public class MultiTaskBuilder<TItem, TResult>
     /// <param name="timeoutMilliseconds">超时毫秒数</param>
     /// <param name="timeoutHandler">超时处理程序，在任务超时时调用</param>
     /// <returns>当前构建器实例，用于链式调用</returns>
-    public MultiTaskBuilder<TItem, TResult> SetTimeout(int timeoutMilliseconds, Action<TimeSpan>? timeoutHandler = null)
+    public MultiTaskBuilder<TItem, TResult> SetTimeout(
+        int timeoutMilliseconds,
+        Action<TimeSpan>? timeoutHandler = null
+    )
     {
         return SetTimeout(TimeSpan.FromMilliseconds(timeoutMilliseconds), timeoutHandler);
     }
@@ -128,7 +139,7 @@ public class MultiTaskBuilder<TItem, TResult>
     public MultiTaskBuilder<TItem, TResult> SetController(TaskController controller)
     {
         ArgumentNullException.ThrowIfNull(controller);
-        
+
         _controller = controller;
         return this;
     }
@@ -142,7 +153,7 @@ public class MultiTaskBuilder<TItem, TResult>
     public MultiTaskBuilder<TItem, TResult> SetErrorHandler(Action<Exception> errorHandler)
     {
         ArgumentNullException.ThrowIfNull(errorHandler);
-        
+
         _errorHandler = errorHandler;
         return this;
     }
@@ -153,10 +164,12 @@ public class MultiTaskBuilder<TItem, TResult>
     /// <param name="completeCallback">完成回调方法，接收处理结果集合作为参数</param>
     /// <returns>当前构建器实例，用于链式调用</returns>
     /// <exception cref="ArgumentNullException">当completeCallback为null时抛出</exception>
-    public MultiTaskBuilder<TItem, TResult> SetCompleteCallback(Action<IEnumerable<TResult>> completeCallback)
+    public MultiTaskBuilder<TItem, TResult> SetCompleteCallback(
+        Action<IEnumerable<TResult>> completeCallback
+    )
     {
         ArgumentNullException.ThrowIfNull(completeCallback);
-        
+
         _completeCallback = completeCallback;
         return this;
     }
@@ -196,7 +209,10 @@ public class MultiTaskBuilder<TItem, TResult>
     public MultiTaskBuilder<TItem, TResult> SetMaxConcurrentTasks(int maxConcurrentTasks)
     {
         if (maxConcurrentTasks < 1)
-            throw new ArgumentOutOfRangeException(nameof(maxConcurrentTasks), "Max concurrent tasks must be greater than zero");
+            throw new ArgumentOutOfRangeException(
+                nameof(maxConcurrentTasks),
+                "Max concurrent tasks must be greater than zero"
+            );
 
         _maxConcurrentTasks = maxConcurrentTasks;
         return this;
@@ -227,10 +243,10 @@ public class MultiTaskBuilder<TItem, TResult>
                 // 如果项目集合为空，直接返回成功结果（空集合）
                 return TaskExecutionResult<TResult>.Success(new List<TResult>(), TimeSpan.Zero);
             }
-            
+
             // 报告初始进度
             _progress?.Report(0.0);
-            
+
             // 延迟执行
             if (_delay.HasValue)
             {
@@ -259,7 +275,7 @@ public class MultiTaskBuilder<TItem, TResult>
 
             var result = await mainTask;
             await controller.SetCompletedAsync();
-            
+
             // 报告完成进度
             _progress?.Report(1.0);
 
@@ -279,7 +295,11 @@ public class MultiTaskBuilder<TItem, TResult>
         {
             await controller.SetErrorAsync();
             _errorHandler?.Invoke(ex);
-            return TaskExecutionResult<TResult>.Failure(ex, TaskExecutionState.Error, stopwatch.Elapsed);
+            return TaskExecutionResult<TResult>.Failure(
+                ex,
+                TaskExecutionState.Error,
+                stopwatch.Elapsed
+            );
         }
         finally
         {
@@ -300,7 +320,9 @@ public class MultiTaskBuilder<TItem, TResult>
     /// 此方法根据配置选择并行或队列方式执行任务，并收集所有处理结果。
     /// 并行执行适合相互独立的任务，队列执行适合需要按顺序处理的任务。
     /// </remarks>
-    private async Task<TaskExecutionResult<TResult>> ExecuteMultiProjectTask(TaskController controller)
+    private async Task<TaskExecutionResult<TResult>> ExecuteMultiProjectTask(
+        TaskController controller
+    )
     {
         var stopwatch = Stopwatch.StartNew();
         var results = new ConcurrentBag<TResult>();
@@ -330,7 +352,11 @@ public class MultiTaskBuilder<TItem, TResult>
         catch (Exception ex)
         {
             stopwatch.Stop();
-            return TaskExecutionResult<TResult>.Failure(ex, TaskExecutionState.Error, stopwatch.Elapsed);
+            return TaskExecutionResult<TResult>.Failure(
+                ex,
+                TaskExecutionState.Error,
+                stopwatch.Elapsed
+            );
         }
     }
 
@@ -349,7 +375,8 @@ public class MultiTaskBuilder<TItem, TResult>
         TaskController controller,
         ConcurrentBag<TResult> results,
         int totalItems,
-        AtomicCounter completedItems)
+        AtomicCounter completedItems
+    )
     {
         var tasks = new List<Task>();
         var semaphore = new SemaphoreSlim(_maxConcurrentTasks);
@@ -361,38 +388,45 @@ public class MultiTaskBuilder<TItem, TResult>
 
             await semaphore.WaitAsync(controller.CancellationToken);
 
-            tasks.Add(Task.Run(async () =>
-            {
-                try
-                {
-                    // 检查暂停状态
-                    if (controller.IsPaused)
+            tasks.Add(
+                Task.Run(
+                    async () =>
                     {
-                        // 使用异步等待而不是同步等待，避免潜在的线程阻塞问题
-                        await controller.PauseEvent.WaitOneAsync(controller.CancellationToken);
-                    }
+                        try
+                        {
+                            // 检查暂停状态
+                            if (controller.IsPaused)
+                            {
+                                // 使用异步等待而不是同步等待，避免潜在的线程阻塞问题
+                                await controller.PauseEvent.WaitOneAsync(
+                                    controller.CancellationToken
+                                );
+                            }
 
-                    // 在执行实际工作前再次检查取消状态，
-                    // 确保即使任务已经启动（例如，从暂停状态恢复后），在执行核心逻辑前也能响应取消请求。
-                    controller.CancellationToken.ThrowIfCancellationRequested();
-                    
-                    // 设置线程优先级（注意：此处的注释 “仅对后台任务有效” 可能需要审阅，
-                    // 因为 _priority 在并行模式下似乎无条件应用，与 _isBackground 标志的行为可能不完全一致）
-                    if (Thread.CurrentThread.IsThreadPoolThread)
-                    {
-                        Thread.CurrentThread.Priority = _priority;
-                    }
+                            // 在执行实际工作前再次检查取消状态，
+                            // 确保即使任务已经启动（例如，从暂停状态恢复后），在执行核心逻辑前也能响应取消请求。
+                            controller.CancellationToken.ThrowIfCancellationRequested();
 
-                    var result = await _itemWork(item, controller.CancellationToken);
-                    results.Add(result);
-                    int currentCount = completedItems.Increment();
-                    _progress?.Report((double)currentCount / totalItems);
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
-            }, controller.CancellationToken));
+                            // 设置线程优先级（注意：此处的注释 “仅对后台任务有效” 可能需要审阅，
+                            // 因为 _priority 在并行模式下似乎无条件应用，与 _isBackground 标志的行为可能不完全一致）
+                            if (Thread.CurrentThread.IsThreadPoolThread)
+                            {
+                                Thread.CurrentThread.Priority = _priority;
+                            }
+
+                            var result = await _itemWork(item, controller.CancellationToken);
+                            results.Add(result);
+                            int currentCount = completedItems.Increment();
+                            _progress?.Report((double)currentCount / totalItems);
+                        }
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                    },
+                    controller.CancellationToken
+                )
+            );
         }
 
         await Task.WhenAll(tasks);
@@ -413,7 +447,8 @@ public class MultiTaskBuilder<TItem, TResult>
         TaskController controller,
         ConcurrentBag<TResult> results,
         int totalItems,
-        AtomicCounter completedItems)
+        AtomicCounter completedItems
+    )
     {
         foreach (var item in _items)
         {
@@ -428,15 +463,18 @@ public class MultiTaskBuilder<TItem, TResult>
             }
 
             var result = _isBackground
-                ? await Task.Run(async () => 
-                {
-                    // 设置线程优先级（仅对后台任务有效）
-                    if (Thread.CurrentThread.IsThreadPoolThread)
+                ? await Task.Run(
+                    async () =>
                     {
-                        Thread.CurrentThread.Priority = _priority;
-                    }
-                    return await _itemWork(item, controller.CancellationToken);
-                }, controller.CancellationToken)
+                        // 设置线程优先级（仅对后台任务有效）
+                        if (Thread.CurrentThread.IsThreadPoolThread)
+                        {
+                            Thread.CurrentThread.Priority = _priority;
+                        }
+                        return await _itemWork(item, controller.CancellationToken);
+                    },
+                    controller.CancellationToken
+                )
                 : await _itemWork(item, controller.CancellationToken);
 
             results.Add(result);
@@ -464,7 +502,7 @@ public class MultiTaskBuilder<TItem, TResult>
         {
             return Interlocked.Increment(ref _count);
         }
-        
+
         /// <summary>
         /// 获取当前计数值
         /// </summary>

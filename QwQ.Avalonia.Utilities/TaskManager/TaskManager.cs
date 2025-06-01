@@ -28,7 +28,7 @@ public static class TaskManager
 
         return new TaskBuilder<T>(_ => Task.FromResult(taskFactory()), isBackground);
     }
-    
+
     /// <summary>
     /// 创建一个新的异步任务
     /// </summary>
@@ -47,7 +47,7 @@ public static class TaskManager
 
         return new TaskBuilder<T>(_ => taskFactory(), isBackground);
     }
-    
+
     /// <summary>
     /// 创建一个新的可取消异步任务
     /// </summary>
@@ -61,13 +61,16 @@ public static class TaskManager
     /// 任务工厂方法接收一个CancellationToken参数，可以用于检测取消请求。
     /// </remarks>
     /// <exception cref="ArgumentNullException">当taskFactory为null时抛出</exception>
-    public static TaskBuilder<T> CreateTask<T>(Func<CancellationToken, Task<T>> taskFactory, bool isBackground = true)
+    public static TaskBuilder<T> CreateTask<T>(
+        Func<CancellationToken, Task<T>> taskFactory,
+        bool isBackground = true
+    )
     {
         ArgumentNullException.ThrowIfNull(taskFactory);
 
         return new TaskBuilder<T>(taskFactory, isBackground);
     }
-    
+
     /// <summary>
     /// 创建一个新的可取消同步任务
     /// </summary>
@@ -81,13 +84,16 @@ public static class TaskManager
     /// 任务工厂方法接收一个CancellationToken参数，可以用于检测取消请求。
     /// </remarks>
     /// <exception cref="ArgumentNullException">当taskFactory为null时抛出</exception>
-    public static TaskBuilder<T> CreateTask<T>(Func<CancellationToken, T> taskFactory, bool isBackground = true)
+    public static TaskBuilder<T> CreateTask<T>(
+        Func<CancellationToken, T> taskFactory,
+        bool isBackground = true
+    )
     {
         ArgumentNullException.ThrowIfNull(taskFactory);
 
         return new TaskBuilder<T>(token => Task.FromResult(taskFactory(token)), isBackground);
     }
-    
+
     /// <summary>
     /// 创建一个无返回值的同步任务
     /// </summary>
@@ -103,13 +109,16 @@ public static class TaskManager
     {
         ArgumentNullException.ThrowIfNull(action);
 
-        return new TaskBuilder<object?>(_ => 
-        {
-            action();
-            return Task.FromResult<object?>(null);
-        }, isBackground);
+        return new TaskBuilder<object?>(
+            _ =>
+            {
+                action();
+                return Task.FromResult<object?>(null);
+            },
+            isBackground
+        );
     }
-    
+
     /// <summary>
     /// 创建一个无返回值的异步任务
     /// </summary>
@@ -125,13 +134,16 @@ public static class TaskManager
     {
         ArgumentNullException.ThrowIfNull(asyncAction);
 
-        return new TaskBuilder<object?>(async _ => 
-        {
-            await asyncAction();
-            return null;
-        }, isBackground);
+        return new TaskBuilder<object?>(
+            async _ =>
+            {
+                await asyncAction();
+                return null;
+            },
+            isBackground
+        );
     }
-    
+
     /// <summary>
     /// 创建一个无返回值的可取消同步任务
     /// </summary>
@@ -144,17 +156,23 @@ public static class TaskManager
     /// 任务动作接收一个CancellationToken参数，可以用于检测取消请求。
     /// </remarks>
     /// <exception cref="ArgumentNullException">当cancellableAction为null时抛出</exception>
-    public static TaskBuilder<object?> CreateTask(Action<CancellationToken> cancellableAction, bool isBackground = true)
+    public static TaskBuilder<object?> CreateTask(
+        Action<CancellationToken> cancellableAction,
+        bool isBackground = true
+    )
     {
         ArgumentNullException.ThrowIfNull(cancellableAction);
 
-        return new TaskBuilder<object?>(token => 
-        {
-            cancellableAction(token);
-            return Task.FromResult<object?>(null);
-        }, isBackground);
+        return new TaskBuilder<object?>(
+            token =>
+            {
+                cancellableAction(token);
+                return Task.FromResult<object?>(null);
+            },
+            isBackground
+        );
     }
-    
+
     /// <summary>
     /// 创建一个无返回值的可取消异步任务
     /// </summary>
@@ -167,15 +185,21 @@ public static class TaskManager
     /// 任务动作接收一个CancellationToken参数，可以用于检测取消请求。
     /// </remarks>
     /// <exception cref="ArgumentNullException">当cancellableAsyncAction为null时抛出</exception>
-    public static TaskBuilder<object?> CreateTask(Func<CancellationToken, Task> cancellableAsyncAction, bool isBackground = true)
+    public static TaskBuilder<object?> CreateTask(
+        Func<CancellationToken, Task> cancellableAsyncAction,
+        bool isBackground = true
+    )
     {
         ArgumentNullException.ThrowIfNull(cancellableAsyncAction);
 
-        return new TaskBuilder<object?>(async token => 
-        {
-            await cancellableAsyncAction(token);
-            return null;
-        }, isBackground);
+        return new TaskBuilder<object?>(
+            async token =>
+            {
+                await cancellableAsyncAction(token);
+                return null;
+            },
+            isBackground
+        );
     }
 
     /// <summary>
@@ -198,7 +222,8 @@ public static class TaskManager
         IEnumerable<TItem> items,
         Func<TItem, Task<TResult>> itemWork,
         bool isParallel = true,
-        bool isBackground = true)
+        bool isBackground = true
+    )
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(itemWork);
@@ -226,7 +251,8 @@ public static class TaskManager
         IEnumerable<TItem> items,
         Func<TItem, TResult> itemWork,
         bool isParallel = true,
-        bool isBackground = true)
+        bool isBackground = true
+    )
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(itemWork);
@@ -235,7 +261,8 @@ public static class TaskManager
             items,
             item => Task.FromResult(itemWork(item)),
             isParallel,
-            isBackground);
+            isBackground
+        );
     }
 
     /// <summary>
@@ -257,7 +284,8 @@ public static class TaskManager
         IEnumerable<TItem> items,
         Func<TItem, Task> itemWork,
         bool isParallel = true,
-        bool isBackground = true)
+        bool isBackground = true
+    )
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(itemWork);
@@ -270,7 +298,8 @@ public static class TaskManager
                 return null;
             },
             isParallel,
-            isBackground);
+            isBackground
+        );
     }
 
     /// <summary>
@@ -292,7 +321,8 @@ public static class TaskManager
         IEnumerable<TItem> items,
         Action<TItem> itemWork,
         bool isParallel = true,
-        bool isBackground = true)
+        bool isBackground = true
+    )
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(itemWork);
@@ -305,7 +335,7 @@ public static class TaskManager
                 return Task.FromResult<object?>(null);
             },
             isParallel,
-            isBackground);
+            isBackground
+        );
     }
-
 }

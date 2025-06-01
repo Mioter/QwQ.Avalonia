@@ -37,10 +37,10 @@ public partial class MainWindowViewModel : ViewModelBase
     public partial PlayMode PlayMode { get; set; } = PlayMode.Sequential;
 
     [ObservableProperty]
-    public partial bool IsPlaying { get; set; }    
-    
+    public partial bool IsPlaying { get; set; }
+
     [ObservableProperty]
     public partial bool IsEnabled { get; set; }
-    
+
     public int[] CountItems { get; set; } = new int[50];
 }

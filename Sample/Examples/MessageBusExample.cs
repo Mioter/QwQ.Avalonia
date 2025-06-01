@@ -47,7 +47,7 @@ public class MessageSender
         // 创建高优先级消息
         MessageBus
             .CreateMessage(new TextMessage(text))
-            .FromSender(this)
+            /*.FromSender(this)*/
             .SetPriority(9) // 设置高优先级
             .Publish();
 

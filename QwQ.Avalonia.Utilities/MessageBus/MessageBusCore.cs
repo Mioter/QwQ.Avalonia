@@ -90,18 +90,81 @@ public static class MessageBus
     /// </summary>
     public static void CleanupDeadSubscriptions()
     {
-        foreach (var messageType in _subscriptions.Keys)
+        foreach (var messageType in _subscriptions.Keys.ToList())
         {
             if (!_subscriptions.TryGetValue(messageType, out var subscriptions))
                 continue;
 
             lock (subscriptions)
             {
-                subscriptions.RemoveAll(s =>
-                    !s.IsActive || (s.IsWeakReference && !s.CheckReceiverAlive())
-                );
+                var deadSubscriptions = subscriptions
+                    .Where(s =>
+                        !s.IsActive
+                        || (s.IsWeakReference && !s.CheckReceiverAlive())
+                        || s.CancellationToken.IsCancellationRequested
+                    )
+                    .ToList();
+
+                foreach (var subscription in deadSubscriptions)
+                {
+                    subscriptions.Remove(subscription);
+                    if (EnableTracing)
+                    {
+                        Trace.WriteLine(
+                            $"[MessageBus] 清理无效订阅: {messageType.Name} -> {subscription.Receiver.GetType().Name}"
+                        );
+                    }
+                }
+
+                // 如果该消息类型没有订阅了，移除整个消息类型
+                if (subscriptions.Count == 0)
+                {
+                    _subscriptions.TryRemove(messageType, out _);
+                }
             }
         }
+    }
+
+    /// <summary>
+    /// 自动清理间隔（毫秒）
+    /// </summary>
+    public static int AutoCleanupInterval { get; set; } = 60000; // 默认1分钟
+
+    private static readonly Timer _cleanupTimer = new(
+        _ => CleanupDeadSubscriptions(),
+        null,
+        Timeout.Infinite,
+        Timeout.Infinite
+    );
+
+    static MessageBus()
+    {
+        // 启动自动清理
+        StartAutoCleanup();
+    }
+
+    /// <summary>
+    /// 启动自动清理
+    /// </summary>
+    public static void StartAutoCleanup()
+    {
+        _cleanupTimer.Change(AutoCleanupInterval, AutoCleanupInterval);
+    }
+
+    /// <summary>
+    /// 停止自动清理
+    /// </summary>
+    public static void StopAutoCleanup()
+    {
+        _cleanupTimer.Change(Timeout.Infinite, Timeout.Infinite);
+    }
+
+    /// <summary>
+    /// 立即执行一次清理
+    /// </summary>
+    public static void CleanupNow()
+    {
+        CleanupDeadSubscriptions();
     }
 
     internal static void AddSubscription<TMessage>(

@@ -21,17 +21,17 @@ public enum TaskExecutionState
     /// 未开始 - 任务已创建但尚未开始执行
     /// </summary>
     NotStarted,
-    
+
     /// <summary>
     /// 运行中 - 任务正在执行中
     /// </summary>
     Running,
-    
+
     /// <summary>
     /// 已暂停 - 任务已暂停执行，可以恢复
     /// </summary>
     Paused,
-    
+
     /// <summary>
     /// 已停止 - 任务已被用户手动停止
     /// </summary>
@@ -39,22 +39,22 @@ public enum TaskExecutionState
     /// 与Cancelled不同，Stopped通常表示用户主动停止，而非因错误或其他原因取消
     /// </remarks>
     Stopped,
-    
+
     /// <summary>
     /// 已取消 - 任务已被取消执行
     /// </summary>
     Cancelled,
-    
+
     /// <summary>
     /// 已完成 - 任务已成功完成
     /// </summary>
     Completed,
-    
+
     /// <summary>
     /// 发生错误 - 任务执行过程中发生异常
     /// </summary>
     Error,
-    
+
     /// <summary>
     /// 超时 - 任务执行时间超过预设的超时时间
     /// </summary>

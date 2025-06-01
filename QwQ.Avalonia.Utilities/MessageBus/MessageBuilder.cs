@@ -10,7 +10,7 @@ public class MessageBuilder<TMessage>
     private bool _oneTime;
     private bool _waitForCompletion;
     private int _priority = 5;
-    private object? _sender;
+    private object _sender = typeof(MessageBus); // 默认为MessageBus类型
     private TimeSpan? _timeout;
     private string? _tag;
     private CancellationToken _cancellationToken = CancellationToken.None;
@@ -142,11 +142,6 @@ public class MessageBuilder<TMessage>
     /// <returns>是否成功发布</returns>
     public bool Publish()
     {
-        if (_sender == null)
-        {
-            throw new InvalidOperationException("必须设置消息发送者");
-        }
-
         // 检查是否有订阅者
         if (!MessageBus.HasSubscribers<TMessage>())
         {
@@ -172,11 +167,6 @@ public class MessageBuilder<TMessage>
     /// <returns>表示异步操作的任务</returns>
     public async Task<bool> PublishAsync()
     {
-        if (_sender == null)
-        {
-            throw new InvalidOperationException("必须设置消息发送者");
-        }
-
         // 检查是否有订阅者
         if (!MessageBus.HasSubscribers<TMessage>())
         {

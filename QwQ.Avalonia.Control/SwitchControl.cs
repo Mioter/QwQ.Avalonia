@@ -15,41 +15,38 @@ public class SwitchControl : ContentControl
     /// 条件值（双向绑定）
     /// 注意：当使用 MultiBinding 时，建议配合 OnlyWhenConverter 等特殊转换器
     /// </summary>
-    public static readonly StyledProperty<bool> ConditionProperty =
-        AvaloniaProperty.Register<SwitchControl, bool>(
-            nameof(Condition),
-            defaultBindingMode: BindingMode.TwoWay);
+    public static readonly StyledProperty<bool> ConditionProperty = AvaloniaProperty.Register<
+        SwitchControl,
+        bool
+    >(nameof(Condition), defaultBindingMode: BindingMode.TwoWay);
 
     /// <summary>
     /// 条件为真时显示的内容（支持继承）
     /// 继承规则：当子 SwitchControl 未显式设置时，会继承父级的值
     /// </summary>
-    public static readonly StyledProperty<object?> TrueContentProperty =
-        AvaloniaProperty.Register<SwitchControl, object?>(
-            nameof(TrueContent),
-            inherits: true);
+    public static readonly StyledProperty<object?> TrueContentProperty = AvaloniaProperty.Register<
+        SwitchControl,
+        object?
+    >(nameof(TrueContent), inherits: true);
 
     /// <summary>
     /// 条件为假时显示的内容（支持继承）
     /// </summary>
-    public static readonly StyledProperty<object?> FalseContentProperty =
-        AvaloniaProperty.Register<SwitchControl, object?>(
-            nameof(FalseContent),
-            inherits: true);
-    
+    public static readonly StyledProperty<object?> FalseContentProperty = AvaloniaProperty.Register<
+        SwitchControl,
+        object?
+    >(nameof(FalseContent), inherits: true);
+
     //------------------------ 构造函数 ------------------------//
     public SwitchControl()
     {
-        ConditionProperty.Changed.AddClassHandler<SwitchControl>(
-            (x, e) => x.UpdateContent());
-        
-        TrueContentProperty.Changed.AddClassHandler<SwitchControl>(
-            (x, e) => x.UpdateContent());
+        ConditionProperty.Changed.AddClassHandler<SwitchControl>((x, e) => x.UpdateContent());
 
-        FalseContentProperty.Changed.AddClassHandler<SwitchControl>(
-            (x, e) => x.UpdateContent());
+        TrueContentProperty.Changed.AddClassHandler<SwitchControl>((x, e) => x.UpdateContent());
+
+        FalseContentProperty.Changed.AddClassHandler<SwitchControl>((x, e) => x.UpdateContent());
     }
-    
+
     //------------------------ 属性访问器 ------------------------//
     /// <summary>
     /// 获取或设置条件值
@@ -86,6 +83,6 @@ public class SwitchControl : ContentControl
     private void UpdateContent()
     {
         // 通过 Avalonia 属性系统自动处理继承
-        Content =  Condition ? TrueContent : FalseContent;
+        Content = Condition ? TrueContent : FalseContent;
     }
 }

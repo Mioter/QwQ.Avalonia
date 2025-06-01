@@ -15,37 +15,37 @@ public class TaskExecutionResult<T>
     /// </summary>
     /// <value>如果任务最终状态为Completed，则为true；否则为false</value>
     public bool IsSuccess => FinalState == TaskExecutionState.Completed;
-    
+
     /// <summary>
     /// 获取任务执行结果（单任务）
     /// </summary>
     /// <value>任务执行的返回值，如果任务未成功完成或是多任务，可能为null</value>
     public T? Result { get; private init; }
-    
+
     /// <summary>
     /// 获取任务执行结果集合（多任务）
     /// </summary>
     /// <value>多任务执行的返回值集合，如果是单任务或任务未成功完成，可能为null</value>
     public IReadOnlyList<T>? Results { get; private init; }
-    
+
     /// <summary>
     /// 获取错误信息
     /// </summary>
     /// <value>任务执行过程中发生的异常，如果任务成功完成，则为null</value>
     public Exception? Exception { get; private init; }
-    
+
     /// <summary>
     /// 获取任务最终状态
     /// </summary>
     /// <value>表示任务执行完成后的最终状态</value>
     public TaskExecutionState FinalState { get; private init; }
-    
+
     /// <summary>
     /// 获取任务执行时长
     /// </summary>
     /// <value>从任务开始到结束的时间跨度</value>
     public TimeSpan ExecutionTime { get; private init; }
-    
+
     /// <summary>
     /// 获取任务是否已取消
     /// </summary>
@@ -63,13 +63,13 @@ public class TaskExecutionResult<T>
     /// </summary>
     /// <value>如果任务最终状态为Error，则为true；否则为false</value>
     public bool IsError => FinalState == TaskExecutionState.Error;
-    
+
     /// <summary>
     /// 获取任务是否已停止
     /// </summary>
     /// <value>如果任务最终状态为Stopped，则为true；否则为false</value>
     public bool IsStopped => FinalState == TaskExecutionState.Stopped;
-    
+
     /// <summary>
     /// 创建单任务成功结果
     /// </summary>
@@ -81,7 +81,6 @@ public class TaskExecutionResult<T>
     /// </remarks>
     public static TaskExecutionResult<T> Success(T result, TimeSpan executionTime)
     {
-        
         return new TaskExecutionResult<T>
         {
             Result = result,
@@ -89,7 +88,7 @@ public class TaskExecutionResult<T>
             ExecutionTime = executionTime,
         };
     }
-    
+
     /// <summary>
     /// 创建多任务成功结果
     /// </summary>
@@ -102,7 +101,7 @@ public class TaskExecutionResult<T>
     public static TaskExecutionResult<T> Success(IReadOnlyList<T> results, TimeSpan executionTime)
     {
         ArgumentNullException.ThrowIfNull(results);
-        
+
         return new TaskExecutionResult<T>
         {
             Results = results,
@@ -110,7 +109,7 @@ public class TaskExecutionResult<T>
             ExecutionTime = executionTime,
         };
     }
-    
+
     /// <summary>
     /// 创建失败结果
     /// </summary>
@@ -121,19 +120,28 @@ public class TaskExecutionResult<T>
     /// <remarks>
     /// 用于任务执行失败时创建结果对象
     /// </remarks>
-    public static TaskExecutionResult<T> Failure(Exception exception, TaskExecutionState state, TimeSpan executionTime)
+    public static TaskExecutionResult<T> Failure(
+        Exception exception,
+        TaskExecutionState state,
+        TimeSpan executionTime
+    )
     {
         ArgumentNullException.ThrowIfNull(exception);
-        
+
         // 验证状态是否为失败状态
-        if (state != TaskExecutionState.Error && 
-            state != TaskExecutionState.Cancelled && 
-            state != TaskExecutionState.Timeout && 
-            state != TaskExecutionState.Stopped)
+        if (
+            state != TaskExecutionState.Error
+            && state != TaskExecutionState.Cancelled
+            && state != TaskExecutionState.Timeout
+            && state != TaskExecutionState.Stopped
+        )
         {
-            throw new ArgumentException("状态必须是失败状态（Error、Cancelled、Timeout或Stopped）", nameof(state));
+            throw new ArgumentException(
+                "状态必须是失败状态（Error、Cancelled、Timeout或Stopped）",
+                nameof(state)
+            );
         }
-        
+
         return new TaskExecutionResult<T>
         {
             Exception = exception,
@@ -141,7 +149,7 @@ public class TaskExecutionResult<T>
             ExecutionTime = executionTime,
         };
     }
-    
+
     /// <summary>
     /// 创建取消结果
     /// </summary>
@@ -152,14 +160,13 @@ public class TaskExecutionResult<T>
     /// </remarks>
     public static TaskExecutionResult<T> Cancelled(TimeSpan executionTime)
     {
-        
         return new TaskExecutionResult<T>
         {
             FinalState = TaskExecutionState.Cancelled,
             ExecutionTime = executionTime,
         };
     }
-    
+
     /// <summary>
     /// 创建超时结果
     /// </summary>
@@ -170,14 +177,13 @@ public class TaskExecutionResult<T>
     /// </remarks>
     public static TaskExecutionResult<T> Timeout(TimeSpan executionTime)
     {
-        
         return new TaskExecutionResult<T>
         {
             FinalState = TaskExecutionState.Timeout,
             ExecutionTime = executionTime,
         };
     }
-    
+
     /// <summary>
     /// 创建已停止结果
     /// </summary>
@@ -188,7 +194,6 @@ public class TaskExecutionResult<T>
     /// </remarks>
     public static TaskExecutionResult<T> Stopped(TimeSpan executionTime)
     {
-        
         return new TaskExecutionResult<T>
         {
             FinalState = TaskExecutionState.Stopped,
