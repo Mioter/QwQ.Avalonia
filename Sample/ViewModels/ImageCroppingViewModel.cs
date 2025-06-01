@@ -10,10 +10,9 @@ namespace Sample.ViewModels;
 
 public partial class ImageCroppingViewModel : ViewModelBase
 {
-    
     [ObservableProperty]
     public partial Bitmap? SourceImage { get; set; }
-    
+
     public double AspectRatio => SelectedItem.Value;
 
     [ObservableProperty]
@@ -30,7 +29,8 @@ public partial class ImageCroppingViewModel : ViewModelBase
         }
     }
 
-    public static AspectRatioMap[] AspectRatioMaps { get; set; } = [new("1:1", 1.0), new("4:3", 4.0 / 3.0), new("16:9", 16.0 / 9.0), new("自由比例", 0.0)];
+    public static AspectRatioMap[] AspectRatioMaps { get; set; } =
+        [new("1:1", 1.0), new("4:3", 4.0 / 3.0), new("16:9", 16.0 / 9.0), new("自由比例", 0.0)];
 
     [RelayCommand]
     private async Task OpenImageButtonClick()
@@ -66,15 +66,14 @@ public partial class ImageCroppingViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-
+            // ignored
         }
     }
 
     [RelayCommand]
-    private async Task SaveImageButtonClick(ImageCropperControl imageCropper)
+    private static async Task SaveImageButtonClick(ImageCropperControl? imageCropper)
     {
-        imageCropper.SourceImage = SourceImage;
-        var croppedImage = imageCropper.GetCroppedImage();
+        var croppedImage = imageCropper?.GetCroppedImage();
         if (croppedImage == null)
             return;
 
@@ -86,18 +85,14 @@ public partial class ImageCroppingViewModel : ViewModelBase
             new FilePickerSaveOptions
             {
                 Title = "保存裁剪图片",
-                SuggestedFileName = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(),
+                SuggestedFileName = new DateTimeOffset(DateTime.UtcNow)
+                    .ToUnixTimeSeconds()
+                    .ToString(),
                 DefaultExtension = "png",
                 FileTypeChoices =
                 [
-                    new FilePickerFileType("PNG图片")
-                    {
-                        Patterns = ["*.png"],
-                    },
-                    new FilePickerFileType("JPEG图片")
-                    {
-                        Patterns = ["*.jpg", "*.jpeg"],
-                    },
+                    new FilePickerFileType("PNG图片") { Patterns = ["*.png"] },
+                    new FilePickerFileType("JPEG图片") { Patterns = ["*.jpg", "*.jpeg"] },
                 ],
             }
         );
@@ -111,7 +106,7 @@ public partial class ImageCroppingViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-
+            // ignored
         }
     }
 }

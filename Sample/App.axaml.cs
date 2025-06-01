@@ -8,7 +8,7 @@ using Sample.Views;
 
 namespace Sample;
 
-public partial class App : Application
+public class App : Application
 {
     public override void Initialize()
     {

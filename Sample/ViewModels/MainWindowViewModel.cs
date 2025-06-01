@@ -1,11 +1,25 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Sample.Enums;
+using Sample.Examples;
 
 namespace Sample.ViewModels;
 
 public partial class MainWindowViewModel : ViewModelBase
 {
+    [RelayCommand]
+    private static async Task RunMessageBusExample()
+    {
+        await MessageBusExample.RunExample();
+    }
+
+    [RelayCommand]
+    private static async Task RunRunMessageBusExample()
+    {
+        await TaskManagerExample.RunExamples();
+    }
+
     [RelayCommand]
     private void TogglePlayMode()
     {
@@ -23,5 +37,10 @@ public partial class MainWindowViewModel : ViewModelBase
     public partial PlayMode PlayMode { get; set; } = PlayMode.Sequential;
 
     [ObservableProperty]
-    public partial bool IsPlaying { get; set; }
+    public partial bool IsPlaying { get; set; }    
+    
+    [ObservableProperty]
+    public partial bool IsEnabled { get; set; }
+    
+    public int[] CountItems { get; set; } = new int[50];
 }

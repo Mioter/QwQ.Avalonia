@@ -17,7 +17,6 @@
     <ItemGroup>
         <PackageReference Include="Avalonia" Version="11.3.0" />
         <PackageReference Include="Avalonia.Desktop" Version="11.3.0" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.0" />
         <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.0" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Include="Avalonia.Diagnostics" Version="11.3.0">
@@ -25,10 +24,7 @@
             <PrivateAssets Condition="'$(Configuration)' != 'Debug'">All</PrivateAssets>
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\QwQ.Avalonia.Control\QwQ.Avalonia.Control.csproj" />
+        <PackageReference Include="Semi.Avalonia" Version="11.2.1.8" />
     </ItemGroup>
 
     <ItemGroup>
@@ -40,5 +36,9 @@
         <DependentUpon>ImageCropperSample.axaml</DependentUpon>
         <SubType>Code</SubType>
       </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\QwQ.Avalonia\QwQ.Avalonia.csproj" />
     </ItemGroup>
 </Project>

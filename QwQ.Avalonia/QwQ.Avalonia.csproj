@@ -10,11 +10,13 @@
         <Authors>Mioter</Authors>
         <Description>提供了一些简单的Avalonia自定义控件以及相关辅助类。自己用的，没啦！QwQ</Description>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <LangVersion>preview</LangVersion>
     </PropertyGroup>
     
     <ItemGroup>
       <ProjectReference Include="..\QwQ.Avalonia.Control\QwQ.Avalonia.Control.csproj" />
       <ProjectReference Include="..\QwQ.Avalonia.Helper\QwQ.Avalonia.Helper.csproj" />
+      <ProjectReference Include="..\QwQ.Avalonia.Utilities\QwQ.Avalonia.Utilities.csproj" />
     </ItemGroup>
     
 </Project>

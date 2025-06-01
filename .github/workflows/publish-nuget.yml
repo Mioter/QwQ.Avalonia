@@ -24,7 +24,11 @@ jobs:
       run: dotnet build --configuration Release --no-restore
 
     - name: Pack project
-      run: dotnet pack --configuration Release --no-build --output ./nupkg
+      run: |
+        dotnet pack QwQ.Avalonia/QwQ.Avalonia.csproj --configuration Release --no-build --output ./nupkg
+        dotnet pack QwQ.Avalonia.Control/QwQ.Avalonia.Control.csproj --configuration Release --no-build --output ./nupkg
+        dotnet pack QwQ.Avalonia.Helper/QwQ.Avalonia.Helper.csproj --configuration Release --no-build --output ./nupkg
+        dotnet pack QwQ.Avalonia.Utilities/QwQ.Avalonia.Utilities.csproj --configuration Release --no-build --output ./nupkg
 
     - name: Publish to NuGet
       run: dotnet nuget push ./nupkg/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}

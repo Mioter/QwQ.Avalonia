@@ -232,9 +232,9 @@ public class ChoiceControl : ItemsControl
             return decimalVal;
         if (targetType == typeof(bool) && bool.TryParse(strValue, out bool boolVal))
             return boolVal;
-        if (targetType == typeof(Guid) && Guid.TryParse(strValue, out Guid guidVal))
+        if (targetType == typeof(Guid) && Guid.TryParse(strValue, out var guidVal))
             return guidVal;
-        if (targetType == typeof(DateTime) && DateTime.TryParse(strValue, out DateTime dateVal))
+        if (targetType == typeof(DateTime) && DateTime.TryParse(strValue, out var dateVal))
             return dateVal;
 
         return value; // 无法转换时返回原值

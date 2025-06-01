@@ -58,7 +58,6 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
     #region 私有字段
 
     private Bitmap? _sourceImage;
-    private Bitmap? _croppedImage;
     private Rect _cropRect;
     private Point _dragStart;
     private bool _isDragging;
@@ -68,7 +67,7 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
     private ResizeHandle _activeHandle = ResizeHandle.None;
     private bool _isResizing;
     private Size _lastControlSize;
-    private bool _isInitialized;
+    private bool _isControlSizeValid;
 
     #endregion
 
@@ -126,8 +125,8 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
     /// </summary>
     public Bitmap? CroppedImage
     {
-        get => _croppedImage;
-        private set => SetAndRaise(CroppedImageProperty, ref _croppedImage, value);
+        get;
+        private set => SetAndRaise(CroppedImageProperty, ref field, value);
     }
 
     #endregion
@@ -155,13 +154,45 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
         if (_aspectRatio != 0)
             return ResizeHandle.None;
 
-        var handleSize = RESIZE_HANDLE_SIZE * 2;
+        double handleSize = RESIZE_HANDLE_SIZE * 2;
         var handles = new[]
         {
-            (ResizeHandle.TopLeft, new Rect(_cropRect.Left - RESIZE_HANDLE_SIZE, _cropRect.Top - RESIZE_HANDLE_SIZE, handleSize, handleSize)),
-            (ResizeHandle.TopRight, new Rect(_cropRect.Right - RESIZE_HANDLE_SIZE, _cropRect.Top - RESIZE_HANDLE_SIZE, handleSize, handleSize)),
-            (ResizeHandle.BottomLeft, new Rect(_cropRect.Left - RESIZE_HANDLE_SIZE, _cropRect.Bottom - RESIZE_HANDLE_SIZE, handleSize, handleSize)),
-            (ResizeHandle.BottomRight, new Rect(_cropRect.Right - RESIZE_HANDLE_SIZE, _cropRect.Bottom - RESIZE_HANDLE_SIZE, handleSize, handleSize))
+            (
+                ResizeHandle.TopLeft,
+                new Rect(
+                    _cropRect.Left - RESIZE_HANDLE_SIZE,
+                    _cropRect.Top - RESIZE_HANDLE_SIZE,
+                    handleSize,
+                    handleSize
+                )
+            ),
+            (
+                ResizeHandle.TopRight,
+                new Rect(
+                    _cropRect.Right - RESIZE_HANDLE_SIZE,
+                    _cropRect.Top - RESIZE_HANDLE_SIZE,
+                    handleSize,
+                    handleSize
+                )
+            ),
+            (
+                ResizeHandle.BottomLeft,
+                new Rect(
+                    _cropRect.Left - RESIZE_HANDLE_SIZE,
+                    _cropRect.Bottom - RESIZE_HANDLE_SIZE,
+                    handleSize,
+                    handleSize
+                )
+            ),
+            (
+                ResizeHandle.BottomRight,
+                new Rect(
+                    _cropRect.Right - RESIZE_HANDLE_SIZE,
+                    _cropRect.Bottom - RESIZE_HANDLE_SIZE,
+                    handleSize,
+                    handleSize
+                )
+            ),
         };
 
         return handles.FirstOrDefault(h => h.Item2.Contains(point)).Item1;
@@ -179,11 +210,11 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
         var imageSize = new Size(_sourceImage.PixelSize.Width, _sourceImage.PixelSize.Height);
 
         // 计算缩放比例，使图片尽可能填满可用空间
-        var scaleX = availableSize.Width / imageSize.Width;
-        var scaleY = availableSize.Height / imageSize.Height;
+        double scaleX = availableSize.Width / imageSize.Width;
+        double scaleY = availableSize.Height / imageSize.Height;
 
         // 选择较小的缩放比例，确保图片完全显示
-        var scale = Math.Min(scaleX, scaleY);
+        double scale = Math.Min(scaleX, scaleY);
 
         // 限制在有效范围内
         return Math.Max(MIN_SCALE, Math.Min(MAX_SCALE, scale));
@@ -217,7 +248,8 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
     /// </summary>
     private Size CalculateCropSize(Size availableSize, Size imageSize)
     {
-        double width, height;
+        double width,
+            height;
 
         if (_aspectRatio == 0)
         {
@@ -262,8 +294,8 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
     /// </summary>
     private Point CalculateCenteredPosition(Size size)
     {
-        var x = (Bounds.Width - size.Width) / 2;
-        var y = (Bounds.Height - size.Height) / 2;
+        double x = (Bounds.Width - size.Width) / 2;
+        double y = (Bounds.Height - size.Height) / 2;
 
         // 确保在安全边距内
         x = Math.Max(SAFE_MARGIN, Math.Min(Bounds.Width - SAFE_MARGIN - size.Width, x));
@@ -344,18 +376,32 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
     /// </summary>
     private void Initialize()
     {
-        if (_isInitialized || _sourceImage == null)
+        if (_sourceImage == null)
             return;
 
-        _isInitialized = true;
+        // 检查控件尺寸是否有效
+        if (Bounds.Width <= 0 || Bounds.Height <= 0)
+        {
+            _isControlSizeValid = false;
+            return;
+        }
 
-        // 计算最佳初始缩放比例
+        _isControlSizeValid = true;
+
+        // 1. 先用默认逻辑计算初步缩放比例和裁剪框
         _imageScale = CalculateInitialScale();
-
-        // 计算最佳初始裁剪框
         _cropRect = CalculateInitialCropRect();
 
-        // 计算初始偏移量，确保图片居中
+        // 2. 计算此时的最小缩放比例，确保裁剪框不会超出图片内容
+        double minScale = CalculateMinScaleForCropBox();
+        if (_imageScale < minScale)
+        {
+            _imageScale = minScale;
+            // 用新的缩放比例重新计算裁剪框
+            _cropRect = CalculateInitialCropRect();
+        }
+
+        // 3. 计算初始偏移量，确保图片居中
         var imageSize = new Size(
             _sourceImage.PixelSize.Width * _imageScale,
             _sourceImage.PixelSize.Height * _imageScale
@@ -371,6 +417,29 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
 
         UpdateCroppedImage();
         InvalidateVisual();
+    }
+
+    /// <summary>
+    /// 计算当前裁剪框下图片的最小缩放比例，保证裁剪框不会超出图片内容
+    /// </summary>
+    private double CalculateMinScaleForCropBox()
+    {
+        if (_sourceImage == null)
+            return MIN_SCALE;
+
+        // 裁剪框尺寸（像素）
+        double cropW = _cropRect.Width;
+        double cropH = _cropRect.Height;
+        double imgW = _sourceImage.PixelSize.Width;
+        double imgH = _sourceImage.PixelSize.Height;
+
+        // 固定比例时，裁剪框宽高比与图片宽高比可能不同
+        // 取短边填满裁剪框
+        double minScaleW = cropW / imgW;
+        double minScaleH = cropH / imgH;
+        double minScale = Math.Max(minScaleW, minScaleH);
+        // 不能小于MIN_SCALE
+        return Math.Max(MIN_SCALE, minScale);
     }
 
     #endregion
@@ -452,15 +521,35 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
         if (_aspectRatio == 0) // 只在自由比例模式下显示调整手柄
         {
             var handleBrush = new SolidColorBrush(Colors.White);
-            var handleSize = RESIZE_HANDLE_SIZE;
+            double handleSize = RESIZE_HANDLE_SIZE;
 
             // 绘制四个角的手柄
             var handles = new[]
             {
-                new Rect(_cropRect.Left - handleSize / 2, _cropRect.Top - handleSize / 2, handleSize, handleSize),
-                new Rect(_cropRect.Right - handleSize / 2, _cropRect.Top - handleSize / 2, handleSize, handleSize),
-                new Rect(_cropRect.Left - handleSize / 2, _cropRect.Bottom - handleSize / 2, handleSize, handleSize),
-                new Rect(_cropRect.Right - handleSize / 2, _cropRect.Bottom - handleSize / 2, handleSize, handleSize)
+                new Rect(
+                    _cropRect.Left - handleSize / 2,
+                    _cropRect.Top - handleSize / 2,
+                    handleSize,
+                    handleSize
+                ),
+                new Rect(
+                    _cropRect.Right - handleSize / 2,
+                    _cropRect.Top - handleSize / 2,
+                    handleSize,
+                    handleSize
+                ),
+                new Rect(
+                    _cropRect.Left - handleSize / 2,
+                    _cropRect.Bottom - handleSize / 2,
+                    handleSize,
+                    handleSize
+                ),
+                new Rect(
+                    _cropRect.Right - handleSize / 2,
+                    _cropRect.Bottom - handleSize / 2,
+                    handleSize,
+                    handleSize
+                ),
             };
 
             foreach (var handle in handles)
@@ -477,24 +566,23 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
         if (change.Property == SourceImageProperty)
         {
             _sourceImage = change.GetNewValue<Bitmap?>();
-            _isInitialized = false;
             Initialize();
         }
         else if (change.Property == AspectRatioProperty)
         {
             _aspectRatio = change.GetNewValue<double>();
 
-            if (_sourceImage != null)
-            {
-                // 重新计算裁剪框
-                _cropRect = CalculateInitialCropRect();
-                
-                // 调整图片位置
-                AdjustImagePosition();
-                
-                UpdateCroppedImage();
-                InvalidateVisual();
-            }
+            if (_sourceImage == null || !_isControlSizeValid)
+                return;
+            
+            // 重新计算裁剪框
+            _cropRect = CalculateInitialCropRect();
+
+            // 调整图片位置
+            AdjustImagePosition();
+
+            UpdateCroppedImage();
+            InvalidateVisual();
         }
     }
 
@@ -502,9 +590,9 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
     {
         base.OnSizeChanged(e);
 
-        if (_sourceImage == null || e.NewSize == _lastControlSize) 
+        if (_sourceImage == null || e.NewSize == _lastControlSize)
             return;
-        
+
         _lastControlSize = e.NewSize;
 
         // 如果控件尺寸变得太小，调整缩放比例
@@ -513,14 +601,22 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
             _imageScale = CalculateInitialScale();
         }
 
-        // 重新计算裁剪框
-        _cropRect = CalculateInitialCropRect();
+        // 如果控件尺寸变为有效，且之前未初始化，则进行初始化
+        if (!_isControlSizeValid && e.NewSize is { Width: > 0, Height: > 0 })
+        {
+            Initialize();
+        }
+        else if (_isControlSizeValid)
+        {
+            // 重新计算裁剪框
+            _cropRect = CalculateInitialCropRect();
 
-        // 调整图片位置
-        AdjustImagePosition();
+            // 调整图片位置
+            AdjustImagePosition();
 
-        UpdateCroppedImage();
-        InvalidateVisual();
+            UpdateCroppedImage();
+            InvalidateVisual();
+        }
     }
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
@@ -561,7 +657,7 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
         {
             // 调整裁剪框大小
             var newRect = CalculateNewCropRect(point);
-            if (newRect.Width >= MIN_CROP_SIZE && newRect.Height >= MIN_CROP_SIZE)
+            if (newRect is { Width: >= MIN_CROP_SIZE, Height: >= MIN_CROP_SIZE })
             {
                 _cropRect = newRect;
                 needsUpdate = true;
@@ -614,10 +710,10 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
         double newY = _cropRect.Y;
 
         // 计算图片在控件中的实际位置
-        var imageLeft = _imageOffset.X;
-        var imageTop = _imageOffset.Y;
-        var imageRight = imageLeft + imageSize.Width;
-        var imageBottom = imageTop + imageSize.Height;
+        double imageLeft = _imageOffset.X;
+        double imageTop = _imageOffset.Y;
+        double imageRight = imageLeft + imageSize.Width;
+        double imageBottom = imageTop + imageSize.Height;
 
         switch (_activeHandle)
         {
@@ -689,13 +785,13 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
     protected override void OnPointerReleased(PointerReleasedEventArgs e)
     {
         base.OnPointerReleased(e);
-        if (_isDragging || _isResizing)
-        {
-            _isDragging = false;
-            _isResizing = false;
-            _activeHandle = ResizeHandle.None;
-            e.Pointer.Capture(null);
-        }
+        if (!_isDragging && !_isResizing) 
+            return;
+        
+        _isDragging = false;
+        _isResizing = false;
+        _activeHandle = ResizeHandle.None;
+        e.Pointer.Capture(null);
     }
 
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
@@ -705,17 +801,19 @@ public class ImageCropperControl : global::Avalonia.Controls.Control
             return;
 
         var point = e.GetPosition(this);
-        var delta = e.Delta.Y;
+        double delta = e.Delta.Y;
 
         // 计算缩放中心点相对于图片的偏移
-        var relativeX = (point.X - _imageOffset.X) / (_sourceImage.PixelSize.Width * _imageScale);
-        var relativeY = (point.Y - _imageOffset.Y) / (_sourceImage.PixelSize.Height * _imageScale);
+        double relativeX =
+            (point.X - _imageOffset.X) / (_sourceImage.PixelSize.Width * _imageScale);
+        double relativeY =
+            (point.Y - _imageOffset.Y) / (_sourceImage.PixelSize.Height * _imageScale);
 
         // 计算新的缩放比例
-        var newScale = _imageScale * (1 + delta * SCALE_FACTOR);
+        double newScale = _imageScale * (1 + delta * SCALE_FACTOR);
 
-        // 限制缩放范围
-        var minScale = CalculateInitialScale();
+        // 限制缩放范围，最小缩放比例为当前裁剪框下图片能覆盖裁剪框的最小比例
+        double minScale = CalculateMinScaleForCropBox();
         newScale = Math.Max(minScale, Math.Min(MAX_SCALE, newScale));
 
         // 如果缩放比例没有变化，直接返回

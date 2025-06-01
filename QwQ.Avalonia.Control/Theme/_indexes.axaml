@@ -4,6 +4,6 @@
     <ResourceDictionary.MergedDictionaries>
         <ResourceInclude Source="IndexControl.axaml" />
         <ResourceInclude Source="ChoiceControl.axaml"/>
-        <ResourceInclude Source="SwitchControl.axaml"/>
+        <!--<ResourceInclude Source="SwitchControl.axaml"/>-->
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>
