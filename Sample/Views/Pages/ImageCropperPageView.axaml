@@ -5,9 +5,9 @@
              xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
              xmlns:viewModels="clr-namespace:Sample.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:DataType="viewModels:ImageCroppingViewModel"
-             x:Class="Sample.Views.ImageCropperSample">
-    <Grid RowDefinitions="Auto,*" Height="400" Width="600">
+             x:DataType="viewModels:ImageCroppingPageViewModel"
+             x:Class="Sample.Views.Pages.ImageCropperPageView">
+    <Grid RowDefinitions="Auto,*">
         
         <StackPanel Grid.Row="0" 
                     Orientation="Horizontal" 

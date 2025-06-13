@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using QwQ.Avalonia.Utilities.TaskManager;
 
-namespace Sample.Examples;
+namespace Sample.UtilitiesExamples;
 
 /// <summary>
 /// TaskManager使用示例演示

@@ -3,7 +3,7 @@ namespace QwQ.Avalonia.Utilities.MessageBus;
 /// <summary>
 /// 消息接收者构建器，用于创建和订阅消息
 /// </summary>
-public class MessageReceiverBuilder<TMessage> : IDisposable
+public class MessageReceiverBuilder<TMessage>
 {
     private readonly object _receiver;
     private Func<TMessage, object, bool> _filter = (_, _) => true;
@@ -12,9 +12,6 @@ public class MessageReceiverBuilder<TMessage> : IDisposable
     private int _priority = 5;
     private string? _tag;
     private CancellationToken _cancellationToken = CancellationToken.None;
-    private CancellationTokenRegistration? _cancellationTokenRegistration;
-    private bool _isSubscribed;
-    private bool _isDisposed;
 
     internal MessageReceiverBuilder(object receiver, Action<TMessage, object>? handler = null)
     {
@@ -114,11 +111,6 @@ public class MessageReceiverBuilder<TMessage> : IDisposable
             throw new InvalidOperationException("必须先设置消息处理程序");
         }
 
-        if (_isSubscribed)
-        {
-            return true;
-        }
-
         MessageBus.AddSubscription(
             _receiver,
             _filter,
@@ -129,19 +121,6 @@ public class MessageReceiverBuilder<TMessage> : IDisposable
             _cancellationToken
         );
 
-        // 注册取消令牌回调
-        if (_cancellationToken.CanBeCanceled)
-        {
-            _cancellationTokenRegistration = _cancellationToken.Register(() =>
-            {
-                if (_isSubscribed)
-                {
-                    Unsubscribe();
-                }
-            });
-        }
-
-        _isSubscribed = true;
         return true;
     }
 
@@ -160,20 +139,7 @@ public class MessageReceiverBuilder<TMessage> : IDisposable
     /// <returns>是否成功取消订阅</returns>
     public bool Unsubscribe()
     {
-        if (!_isSubscribed)
-        {
-            return false;
-        }
-
-        var result = MessageBus.RemoveSubscription<TMessage>(_receiver, _tag);
-        if (result)
-        {
-            _isSubscribed = false;
-            _cancellationTokenRegistration?.Dispose();
-            _cancellationTokenRegistration = null;
-        }
-
-        return result;
+        return MessageBus.RemoveSubscription<TMessage>(_receiver, _tag);
     }
 
     /// <summary>
@@ -183,39 +149,6 @@ public class MessageReceiverBuilder<TMessage> : IDisposable
     /// <returns>是否成功取消订阅</returns>
     public bool UnsubscribeByTag(string tag)
     {
-        if (!_isSubscribed)
-        {
-            return false;
-        }
-
-        var result = MessageBus.RemoveSubscription<TMessage>(_receiver, tag);
-        if (result)
-        {
-            _isSubscribed = false;
-            _cancellationTokenRegistration?.Dispose();
-            _cancellationTokenRegistration = null;
-        }
-
-        return result;
-    }
-
-    /// <summary>
-    /// 释放资源
-    /// </summary>
-    public void Dispose()
-    {
-        if (_isDisposed)
-        {
-            return;
-        }
-
-        if (_isSubscribed)
-        {
-            Unsubscribe();
-        }
-
-        _cancellationTokenRegistration?.Dispose();
-        _cancellationTokenRegistration = null;
-        _isDisposed = true;
+        return MessageBus.RemoveSubscription<TMessage>(_receiver, tag);
     }
 }

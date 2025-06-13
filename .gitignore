@@ -1,0 +1,7 @@
+# 忽略idea文件
+.idea/
+.vscode/
+
+# 忽略bin和obj文件夹
+bin/
+obj/

@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Add Resources Here -->
+    
+    <ControlTheme x:Key="CategoryTabItem" TargetType="TabItem">
+        <Setter Property="IsEnabled" Value="False" />
+        <Setter Property="Template">
+            <ControlTemplate TargetType="TabItem">
+                <TextBlock
+                    FontWeight="Bold"
+                    FontSize="12"
+                    Margin="4"
+                    Text="{TemplateBinding Header}" />
+            </ControlTemplate>
+        </Setter>
+        <Style Selector="^:disabled /template/ TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource SemiColorText1}" />
+        </Style>
+    </ControlTheme>
+    
+</ResourceDictionary>

@@ -1,0 +1,38 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- Add Resources Here -->
+    <ControlTheme x:Key="IconBorderlessToggleSwitch"
+                  BasedOn="{StaticResource ButtonToggleSwitch}"
+                  TargetType="ToggleSwitch">
+        <Setter Property="Padding" Value="{StaticResource SemiThicknessTight}" />
+        <Setter Property="Width" Value="{StaticResource SemiSpacingExtraLoose}" />
+        <Setter Property="Height" Value="{StaticResource SemiSpacingExtraLoose}" />
+        <Setter Property="Foreground" Value="{DynamicResource SemiColorText1}" />
+        <Setter Property="OnContentTemplate">
+            <StaticResource ResourceKey="GeometryDataTemplate" />
+        </Setter>
+        <Setter Property="OffContentTemplate">
+            <StaticResource ResourceKey="GeometryDataTemplate" />
+        </Setter>
+        <Setter Property="ContentTemplate">
+            <StaticResource ResourceKey="GeometryDataTemplate" />
+        </Setter>
+    </ControlTheme>
+
+    <ControlTheme x:Key="IconBorderlessButton"
+                  BasedOn="{StaticResource BorderlessButton}"
+                  TargetType="Button">
+        <Setter Property="Padding" Value="{StaticResource SemiThicknessTight}" />
+        <Setter Property="Width" Value="{StaticResource SemiSpacingExtraLoose}" />
+        <Setter Property="Height" Value="{StaticResource SemiSpacingExtraLoose}" />
+        <Setter Property="Foreground" Value="{DynamicResource SemiColorText1}" />
+        <Setter Property="ContentTemplate">
+            <StaticResource ResourceKey="GeometryDataTemplate" />
+        </Setter>
+    </ControlTheme>
+
+    <DataTemplate x:Key="GeometryDataTemplate" DataType="Geometry">
+        <PathIcon Theme="{StaticResource InnerPathIcon}" Data="{Binding}" />
+    </DataTemplate>
+    
+</ResourceDictionary>

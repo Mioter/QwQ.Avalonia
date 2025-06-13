@@ -14,6 +14,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="Assets/Icons/_indexes.axaml" />
+                <ResourceInclude Source="Assets/ControlThemes/_indexes.axaml" />
                 <ResourceInclude Source="avares://QwQ.Avalonia.Control/Theme/_indexes.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

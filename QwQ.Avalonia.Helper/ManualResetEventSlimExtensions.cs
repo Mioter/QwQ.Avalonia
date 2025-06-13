@@ -30,8 +30,6 @@ public static class ManualResetEventSlimExtensions
         CancellationToken cancellationToken = default
     )
     {
-        ArgumentNullException.ThrowIfNull(waitHandle);
-
         // 如果已经设置，则立即返回完成的任务
         if (waitHandle.WaitOne(0))
             return Task.CompletedTask;

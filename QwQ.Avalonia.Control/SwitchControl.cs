@@ -18,7 +18,7 @@ public class SwitchControl : ContentControl
     public static readonly StyledProperty<bool> ConditionProperty = AvaloniaProperty.Register<
         SwitchControl,
         bool
-    >(nameof(Condition), defaultBindingMode: BindingMode.TwoWay);
+    >(nameof(Condition), defaultBindingMode: BindingMode.OneWay);
 
     /// <summary>
     /// 条件为真时显示的内容（支持继承）
@@ -40,11 +40,11 @@ public class SwitchControl : ContentControl
     //------------------------ 构造函数 ------------------------//
     public SwitchControl()
     {
-        ConditionProperty.Changed.AddClassHandler<SwitchControl>((x, e) => x.UpdateContent());
+        ConditionProperty.Changed.AddClassHandler<SwitchControl>((x, _) => x.UpdateContent());
 
-        TrueContentProperty.Changed.AddClassHandler<SwitchControl>((x, e) => x.UpdateContent());
+        TrueContentProperty.Changed.AddClassHandler<SwitchControl>((x, _) => x.UpdateContent());
 
-        FalseContentProperty.Changed.AddClassHandler<SwitchControl>((x, e) => x.UpdateContent());
+        FalseContentProperty.Changed.AddClassHandler<SwitchControl>((x, _) => x.UpdateContent());
     }
 
     //------------------------ 属性访问器 ------------------------//

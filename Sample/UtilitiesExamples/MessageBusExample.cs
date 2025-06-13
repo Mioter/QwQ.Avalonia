@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using QwQ.Avalonia.Utilities.MessageBus;
 
-namespace Sample.Examples;
+namespace Sample.UtilitiesExamples;
 
 /// <summary>
 /// 示例消息类型

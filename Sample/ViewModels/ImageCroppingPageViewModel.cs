@@ -8,7 +8,7 @@ using QwQ.Avalonia.Control;
 
 namespace Sample.ViewModels;
 
-public partial class ImageCroppingViewModel : ViewModelBase
+public partial class ImageCroppingPageViewModel : ViewModelBase
 {
     [ObservableProperty]
     public partial Bitmap? SourceImage { get; set; }

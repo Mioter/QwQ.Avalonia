@@ -30,10 +30,6 @@ internal class Subscription
         CancellationToken cancellationToken = default
     )
     {
-        ArgumentNullException.ThrowIfNull(receiver);
-        ArgumentNullException.ThrowIfNull(filter);
-        ArgumentNullException.ThrowIfNull(handler);
-
         if (useWeakReference)
         {
             _weakReceiver = new WeakReference(receiver);
