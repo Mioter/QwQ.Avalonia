@@ -15,7 +15,7 @@ public class MessageReceiverBuilder<TMessage>
 
     internal MessageReceiverBuilder(object receiver, Action<TMessage, object>? handler = null)
     {
-        _receiver = receiver;
+        _receiver = receiver ?? throw new ArgumentNullException(nameof(receiver));
         _handler = handler;
     }
 
@@ -26,7 +26,7 @@ public class MessageReceiverBuilder<TMessage>
     /// <returns>消息接收者构建器</returns>
     public MessageReceiverBuilder<TMessage> WithFilter(Func<TMessage, object, bool> filter)
     {
-        _filter = filter;
+        _filter = filter ?? throw new ArgumentNullException(nameof(filter));
         return this;
     }
 
@@ -49,11 +49,7 @@ public class MessageReceiverBuilder<TMessage>
     /// <returns>消息接收者构建器</returns>
     public MessageReceiverBuilder<TMessage> WithPriority(int priority)
     {
-        if (priority < 0)
-            priority = 0;
-        if (priority > 9)
-            priority = 9;
-        _priority = priority;
+        _priority = Math.Clamp(priority, 0, 9);
         return this;
     }
 
@@ -96,7 +92,7 @@ public class MessageReceiverBuilder<TMessage>
     /// </summary>
     public MessageReceiverBuilder<TMessage> WithHandler(Action<TMessage, object> handler)
     {
-        _handler = handler;
+        _handler = handler ?? throw new ArgumentNullException(nameof(handler));
         return this;
     }
 

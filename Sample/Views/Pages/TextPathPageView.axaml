@@ -1,0 +1,22 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Sample.Views.Pages.TextPathPageView">
+    <StackPanel Spacing="10" Margin="10">
+        <TextBox Name="TextBox" Watermark="输入文本" Text="我是字体描边" />
+        <TextBlock Text="描边粗细：" />
+        <NumericUpDown Minimum="0" Name="NumericUpDown" Value="5" />
+        <TextBlock Text="字体大小：" />
+        <NumericUpDown Minimum="12" Name="NumericUpDown1" Value="25" />
+        <TextBlock Text="文字间距：" />
+        <NumericUpDown Minimum="0" Name="NumericUpDown2" Value="5" />
+
+        <control:TextPath HorizontalAlignment="Center"
+                          Text="{Binding #TextBox.Text}" StrokeThickness="{Binding #NumericUpDown.Value}"
+                          FontSize="{Binding #NumericUpDown1.Value}"
+                          Stroke="BlueViolet" Foreground="White" LetterSpacing="{Binding #NumericUpDown2.Value}" />
+    </StackPanel>
+</UserControl>

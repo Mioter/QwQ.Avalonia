@@ -17,7 +17,7 @@ public class MessageBuilder<TMessage>
 
     internal MessageBuilder(TMessage content)
     {
-        _content = content;
+        _content = content ?? throw new ArgumentNullException(nameof(content));
     }
 
     /// <summary>
@@ -29,7 +29,7 @@ public class MessageBuilder<TMessage>
     public MessageBuilder<TMessage> FromSender<TSender>(TSender sender)
         where TSender : class
     {
-        _sender = sender;
+        _sender = sender ?? throw new ArgumentNullException(nameof(sender));
         return this;
     }
 
@@ -52,6 +52,9 @@ public class MessageBuilder<TMessage>
     /// <returns>消息构建器</returns>
     public MessageBuilder<TMessage> AddReceivers(params Type[] receiverTypes)
     {
+        if (receiverTypes.Length == 0)
+            return this;
+
         foreach (var receiverType in receiverTypes)
         {
             _receivers.Add(receiverType);
@@ -84,11 +87,7 @@ public class MessageBuilder<TMessage>
     /// <returns>消息构建器</returns>
     public MessageBuilder<TMessage> SetPriority(int priority)
     {
-        if (priority < 0)
-            priority = 0;
-        if (priority > 9)
-            priority = 9;
-        _priority = priority;
+        _priority = Math.Clamp(priority, 0, 9);
         return this;
     }
 
@@ -110,6 +109,9 @@ public class MessageBuilder<TMessage>
     /// <returns>消息构建器</returns>
     public MessageBuilder<TMessage> WithTimeout(TimeSpan timeout)
     {
+        if (timeout < TimeSpan.Zero)
+            throw new ArgumentOutOfRangeException(nameof(timeout), "超时时间不能为负数");
+
         _timeout = timeout;
         return this;
     }
@@ -121,6 +123,9 @@ public class MessageBuilder<TMessage>
     /// <returns>消息构建器</returns>
     public MessageBuilder<TMessage> WithTimeoutMilliseconds(int milliseconds)
     {
+        if (milliseconds < 0)
+            throw new ArgumentOutOfRangeException(nameof(milliseconds), "超时时间不能为负数");
+
         _timeout = TimeSpan.FromMilliseconds(milliseconds);
         return this;
     }

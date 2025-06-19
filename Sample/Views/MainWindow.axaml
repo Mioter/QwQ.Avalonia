@@ -89,23 +89,22 @@
             <TabItem
                 Theme="{DynamicResource CategoryTabItem}"
                 Header="Simple" />
-            
+
             <TabItem Header="Buttons">
                 <pages:SimpleExamplePageView />
             </TabItem>
-            
+
             <TabItem
                 Theme="{DynamicResource CategoryTabItem}"
                 Header="Tool" />
 
-            <TabItem Header="Dock">
-                <pages:DockingPageView />
+            <TabItem Header="ImageCropper">
+                <pages:ImageCropperPageView />
             </TabItem>
-            
-              <TabItem Header="ImageCropper">
-                  <pages:ImageCropperPageView />
-              </TabItem>
-            
+
+            <TabItem Header="TextPath">
+                <pages:TextPathPageView />
+            </TabItem>
         </TabControl>
         </Grid>
 </Window>

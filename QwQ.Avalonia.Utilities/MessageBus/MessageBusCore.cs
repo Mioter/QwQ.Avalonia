@@ -9,27 +9,31 @@ namespace QwQ.Avalonia.Utilities.MessageBus;
 /// </summary>
 public static class MessageBus
 {
-    // 使用 ConcurrentDictionary 存储订阅者，减少锁竞争
-    private static readonly ConcurrentDictionary<Type, ConcurrentBag<Subscription>> _subscriptions =
-        new();
-    private static readonly ConcurrentDictionary<string, HashSet<Type>> _messageGroups = new();
-    private static readonly Timer _cleanupTimer = new(
-        _ => CleanupDeadSubscriptions(),
-        null,
-        Timeout.Infinite,
-        Timeout.Infinite
-    );
+    private static readonly ConcurrentDictionary<Type, List<Subscription>> _subscriptions = new();
+    private static readonly ConcurrentDictionary<string, List<Type>> _messageGroups = new();
 
-    // 使用对象池来减少内存分配
-    private static readonly ObjectPool<List<Subscription>> _subscriptionListPool = new(
-        () => new List<Subscription>(32),
-        list => list.Clear()
-    );
-    
     static MessageBus()
     {
         // 默认启用自动清理
         EnableAutoCleanup = true;
+        AutoCleanupInterval = TimeSpan.FromMinutes(1);
+    }
+
+    /// <summary>
+    /// 清理所有资源
+    /// </summary>
+    public static void Dispose()
+    {
+        try
+        {
+            _cleanupTimer.Dispose();
+            _subscriptions.Clear();
+            _messageGroups.Clear();
+        }
+        catch (Exception ex) when (EnableExceptionHandling)
+        {
+            ExceptionHandler?.Invoke(ex, "清理MessageBus资源时发生异常");
+        }
     }
 
     /// <summary>
@@ -46,6 +50,13 @@ public static class MessageBus
     /// 异常处理器
     /// </summary>
     public static Action<Exception, string>? ExceptionHandler { get; set; }
+
+    private static readonly Timer _cleanupTimer = new(
+        _ => CleanupDeadSubscriptions(),
+        null,
+        Timeout.Infinite,
+        Timeout.Infinite
+    );
 
     /// <summary>
     /// 是否启用自动清理
@@ -71,7 +82,7 @@ public static class MessageBus
     }
 
     /// <summary>
-    /// 自动清理间隔（毫秒）
+    /// 自动清理间隔
     /// </summary>
     public static TimeSpan AutoCleanupInterval
     {
@@ -87,15 +98,12 @@ public static class MessageBus
                 _cleanupTimer.Change(value, value);
             }
         }
-    } = TimeSpan.FromMinutes(1);
-    
+    }
+
     /// <summary>
     /// 立即执行一次清理
     /// </summary>
-    public static void CleanupNow()
-    {
-        CleanupDeadSubscriptions();
-    }
+    public static void CleanupNow() => CleanupDeadSubscriptions();
 
     /// <summary>
     /// 创建消息
@@ -128,23 +136,15 @@ public static class MessageBus
     {
         if (string.IsNullOrEmpty(groupName))
             throw new ArgumentException("组名称不能为空", nameof(groupName));
-        
-        groupName = groupName.Trim().ToLowerInvariant(); // 规范化组名
-        
-        foreach (var type in messageTypes)
-        {
-            if (!type.IsClass || type.IsAbstract)
-                throw new ArgumentException($"消息类型 {type.Name} 必须是具体的类", nameof(messageTypes));
-        }
-        
+
         _messageGroups.AddOrUpdate(
             groupName,
-            _ => messageTypes.ToHashSet(),
+            _ => messageTypes.ToList(),
             (_, existingTypes) =>
             {
                 lock (existingTypes)
                 {
-                    existingTypes.UnionWith(messageTypes.Where(t => !existingTypes.Contains(t)));
+                    existingTypes.AddRange(messageTypes.Where(t => !existingTypes.Contains(t)));
                 }
                 return existingTypes;
             }
@@ -166,38 +166,45 @@ public static class MessageBus
     /// <summary>
     /// 清理无效的订阅（接收者已被垃圾回收）
     /// </summary>
-    private static void CleanupDeadSubscriptions()
+    public static void CleanupDeadSubscriptions()
     {
-        foreach (var messageType in _subscriptions.Keys)
-        {
-            if (!_subscriptions.TryGetValue(messageType, out var subscriptions))
-                continue;
+        var messageTypesToRemove = new List<Type>();
 
-            var newSubscriptions = new ConcurrentBag<Subscription>();
-            foreach (var subscription in subscriptions)
+        foreach (var (messageType, subscriptions) in _subscriptions)
+        {
+            lock (subscriptions)
             {
-                if (
-                    subscription
-                        is
-                        {
-                            IsWeakReference:false,
-                            IsActive: true,
-                            CancellationToken.IsCancellationRequested: false,
-                        } && subscription.CheckReceiverAlive()
-                )
+                var deadSubscriptions = subscriptions
+                    .Where(s =>
+                        !s.IsActive
+                        || s.IsWeakReference && !s.CheckReceiverAlive()
+                        || s.CancellationToken.IsCancellationRequested
+                    )
+                    .ToList();
+
+                foreach (var subscription in deadSubscriptions)
                 {
-                    newSubscriptions.Add(subscription);
+                    subscriptions.Remove(subscription);
+                    if (EnableTracing)
+                    {
+                        Trace.WriteLine(
+                            $"[MessageBus] 清理无效订阅: {messageType.Name} -> {subscription.Receiver.GetType().Name}"
+                        );
+                    }
+                }
+
+                // 如果该消息类型没有订阅了，标记为需要移除
+                if (subscriptions.Count == 0)
+                {
+                    messageTypesToRemove.Add(messageType);
                 }
             }
+        }
 
-            if (newSubscriptions.IsEmpty)
-            {
-                _subscriptions.TryRemove(messageType, out _);
-            }
-            else
-            {
-                _subscriptions[messageType] = newSubscriptions;
-            }
+        // 移除空的订阅列表
+        foreach (var messageType in messageTypesToRemove)
+        {
+            _subscriptions.TryRemove(messageType, out _);
         }
     }
 
@@ -211,6 +218,10 @@ public static class MessageBus
         CancellationToken cancellationToken = default
     )
     {
+        ArgumentNullException.ThrowIfNull(receiver);
+        ArgumentNullException.ThrowIfNull(filter);
+        ArgumentNullException.ThrowIfNull(handler);
+
         var messageType = typeof(TMessage);
         var subscription = new Subscription(
             receiver,
@@ -222,13 +233,42 @@ public static class MessageBus
             cancellationToken
         );
 
-        var subscriptions = _subscriptions.GetOrAdd(messageType, _ => []);
+        _subscriptions.AddOrUpdate(
+            messageType,
+            _ => [subscription],
+            (_, list) =>
+            {
+                lock (list)
+                {
+                    // 检查是否已存在相同的订阅（相同接收者和处理程序）
+                    var existingSubscription = list.FirstOrDefault(s =>
+                        s.Receiver == receiver && s.Handler.Method == handler.Method
+                    );
 
-        subscriptions.Add(subscription);
-
-        TraceMessage(
-            $"添加订阅: {messageType.Name} -> {receiver.GetType().Name}{(tag != null ? $" (标签: {tag})" : "")}"
+                    if (existingSubscription != null)
+                    {
+                        // 更新现有订阅
+                        existingSubscription.IsActive = true;
+                        existingSubscription.Priority = priority;
+                        existingSubscription.Tag = tag;
+                        existingSubscription.CancellationToken = cancellationToken;
+                    }
+                    else
+                    {
+                        // 添加新订阅
+                        list.Add(subscription);
+                    }
+                }
+                return list;
+            }
         );
+
+        if (EnableTracing)
+        {
+            Trace.WriteLine(
+                $"[MessageBus] 添加订阅: {messageType.Name} -> {receiver.GetType().Name}{(tag != null ? $" (标签: {tag})" : "")}"
+            );
+        }
     }
 
     internal static bool RemoveSubscription<TMessage>(object receiver, string? tag = null)
@@ -237,33 +277,24 @@ public static class MessageBus
         if (!_subscriptions.TryGetValue(messageType, out var subscriptions))
             return false;
 
-        int count = 0;
-        var newSubscriptions = new ConcurrentBag<Subscription>();
-
-        foreach (var subscription in subscriptions)
+        lock (subscriptions)
         {
-            if (
-                tag == null && subscription.Receiver == receiver
-                || tag != null && subscription.Receiver == receiver && subscription.Tag == tag
-            )
-            {
-                count++;
-            }
-            else
-            {
-                newSubscriptions.Add(subscription);
-            }
-        }
+            int count =
+                // 只移除特定标签的订阅
+                tag != null
+                    ? subscriptions.RemoveAll(s => s.Receiver == receiver && s.Tag == tag) :
+                    // 移除所有该接收者的订阅
+                    subscriptions.RemoveAll(s => s.Receiver == receiver);
 
-        if (count > 0)
-        {
-            _subscriptions[messageType] = newSubscriptions;
-            TraceMessage(
-                $"移除订阅: {messageType.Name} -> {receiver.GetType().Name}{(tag != null ? $" (标签: {tag})" : "")} (数量: {count})"
-            );
-        }
+            if (EnableTracing && count > 0)
+            {
+                Trace.WriteLine(
+                    $"[MessageBus] 移除订阅: {messageType.Name} -> {receiver.GetType().Name}{(tag != null ? $" (标签: {tag})" : "")} (数量: {count})"
+                );
+            }
 
-        return count > 0;
+            return count > 0;
+        }
     }
 
     /// <summary>
@@ -284,29 +315,26 @@ public static class MessageBus
             if (!_subscriptions.TryGetValue(messageType, out var subscriptions))
                 continue;
 
-            var newSubscriptions = new ConcurrentBag<Subscription>();
-            foreach (var subscription in subscriptions)
+            lock (subscriptions)
             {
-                if (receiver == null || subscription.Receiver == receiver)
+                if (receiver != null)
                 {
-                    anyRemoved = true;
+                    // 只移除特定接收者的订阅
+                    anyRemoved |= subscriptions.RemoveAll(s => s.Receiver == receiver) > 0;
                 }
                 else
                 {
-                    newSubscriptions.Add(subscription);
+                    // 移除所有订阅
+                    anyRemoved |= subscriptions.Count > 0;
+                    subscriptions.Clear();
                 }
-            }
-
-            if (anyRemoved)
-            {
-                _subscriptions[messageType] = newSubscriptions;
             }
         }
 
-        if (anyRemoved)
+        if (EnableTracing && anyRemoved)
         {
-            TraceMessage(
-                $"移除组订阅: {groupName}{(receiver != null ? $" -> {receiver.GetType().Name}" : "")}"
+            Trace.WriteLine(
+                $"[MessageBus] 移除组订阅: {groupName}{(receiver != null ? $" -> {receiver.GetType().Name}" : "")}"
             );
         }
 
@@ -329,84 +357,148 @@ public static class MessageBus
         ArgumentNullException.ThrowIfNull(sender);
 
         var messageType = typeof(TMessage);
-        var matchingSubscriptions = GetMatchingSubscriptions(messageType, receivers, tag);
-
-        if (matchingSubscriptions.Count == 0)
+        if (!_subscriptions.TryGetValue(messageType, out var subscriptions))
         {
-            TraceMessage($"没有找到消息类型 {messageType.Name} 的订阅者");
+            if (EnableTracing)
+            {
+                Trace.WriteLine($"[MessageBus] 没有找到消息类型 {messageType.Name} 的订阅者");
+            }
             return;
         }
 
-        TraceMessage(
-            $"发布消息: {messageType.Name} 从 {sender.GetType().Name} 到 {matchingSubscriptions.Count} 个接收者{(tag != null ? $" (标签: {tag})" : "")}"
-        );
+        List<Subscription> matchingSubscriptions;
+        lock (subscriptions)
+        {
+            matchingSubscriptions = subscriptions
+                .Where(s =>
+                    s is { IsActive: true, CancellationToken.IsCancellationRequested: false }
+                    && (tag == null || s.Tag == tag)
+                    && (
+                        receivers == null
+                        || receivers.Any(r =>
+                            r is Type receiverType
+                                ? s.Receiver.GetType() == receiverType
+                                    || s.Receiver.GetType().IsSubclassOf(receiverType)
+                                : r == s.Receiver
+                        )
+                    )
+                )
+                .OrderByDescending(s => s.Priority)
+                .ToList();
+        }
 
-        var tasks = new List<Task>();
+        if (matchingSubscriptions.Count == 0)
+        {
+            if (EnableTracing)
+            {
+                Trace.WriteLine($"[MessageBus] 没有找到匹配的订阅者: {messageType.Name}");
+            }
+            return;
+        }
+
+        if (EnableTracing)
+        {
+            Trace.WriteLine(
+                $"[MessageBus] 发布消息: {messageType.Name} 从 {sender.GetType().Name} 到 {matchingSubscriptions.Count} 个接收者{(tag != null ? $" (标签: {tag})" : "")}"
+            );
+        }
+
+        var tasks = new List<Task>(matchingSubscriptions.Count);
         var stopwatch = EnableTracing ? Stopwatch.StartNew() : null;
 
-        try
+        foreach (var subscription in matchingSubscriptions)
         {
-            foreach (var subscription in matchingSubscriptions.Where(s => s.Filter(message)))
-            {
-                subscription.Priority = priority;
-                var task = HandleSubscriptionMessageAsync(
-                    message,
-                    subscription,
-                    sender,
-                    timeout,
-                    cancellationToken
-                );
-                tasks.Add(task);
+            if (!subscription.Filter(message))
+                continue;
 
-                if (oneTime)
-                {
-                    subscription.IsActive = false;
-                }
+            if (!subscription.IsActive || subscription.CancellationToken.IsCancellationRequested)
+                continue;
+
+            if (subscription.IsWeakReference && !subscription.CheckReceiverAlive())
+            {
+                subscription.IsActive = false;
+                continue;
             }
 
-            if (waitForCompletion && tasks.Count > 0)
-            {
-                try
+            subscription.Priority = priority;
+
+            var task = Task.Run(
+                () =>
                 {
-                    if (timeout.HasValue)
+                    try
                     {
-                        var cts = new CancellationTokenSource(timeout.Value);
-                        try 
+                        if (cancellationToken.IsCancellationRequested)
+                            return;
+
+                        subscription.Handler(message, sender);
+                    }
+                    catch (Exception ex) when (EnableExceptionHandling)
+                    {
+                        ExceptionHandler?.Invoke(ex, $"处理消息 {messageType.Name} 时发生异常");
+
+                        if (EnableTracing)
                         {
-                            await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(timeout.Value, cts.Token));
-                            if (!cts.IsCancellationRequested)
-                            {
-                                cts.Cancel(); // 取消所有未完成的任务
-                            }
-                        }
-                        finally 
-                        {
-                            cts.Dispose();
+                            Trace.WriteLine(
+                                $"[MessageBus] 异常: 处理消息 {messageType.Name} 时发生异常: {ex.Message}"
+                            );
                         }
                     }
-                    else
+                },
+                cancellationToken
+            );
+
+            tasks.Add(task);
+
+            if (oneTime)
+            {
+                subscription.IsActive = false;
+            }
+        }
+
+        if (waitForCompletion && tasks.Count > 0)
+        {
+            try
+            {
+                if (timeout.HasValue)
+                {
+                    // 使用超时等待所有任务完成
+                    var completedTask = await Task.WhenAny(
+                        Task.WhenAll(tasks),
+                        Task.Delay(timeout.Value, cancellationToken)
+                    );
+                    if (completedTask != Task.WhenAll(tasks))
                     {
-                        await Task.WhenAll(tasks);
+                        if (EnableTracing)
+                        {
+                            Trace.WriteLine($"[MessageBus] 超时: 消息 {messageType.Name} 处理超时");
+                        }
                     }
                 }
-                catch (Exception ex) when (EnableExceptionHandling)
+                else
                 {
-                    ExceptionHandler?.Invoke(ex, $"等待消息 {messageType.Name} 处理完成时发生异常");
-                    TraceMessage(
-                        $"异常: 等待消息 {messageType.Name} 处理完成时发生异常: {ex.Message}"
+                    // 无超时等待所有任务完成
+                    await Task.WhenAll(tasks);
+                }
+            }
+            catch (Exception ex) when (EnableExceptionHandling)
+            {
+                ExceptionHandler?.Invoke(ex, $"等待消息 {messageType.Name} 处理完成时发生异常");
+
+                if (EnableTracing)
+                {
+                    Trace.WriteLine(
+                        $"[MessageBus] 异常: 等待消息 {messageType.Name} 处理完成时发生异常: {ex.Message}"
                     );
                 }
             }
         }
-        finally
+
+        if (EnableTracing && stopwatch != null)
         {
-            if (stopwatch != null)
-            {
-                stopwatch.Stop();
-                TraceMessage(
-                    $"完成: 消息 {messageType.Name} 处理耗时 {stopwatch.ElapsedMilliseconds}ms"
-                );
-            }
+            stopwatch.Stop();
+            Trace.WriteLine(
+                $"[MessageBus] 完成: 消息 {messageType.Name} 处理耗时 {stopwatch.ElapsedMilliseconds}ms"
+            );
         }
     }
 
@@ -421,44 +513,104 @@ public static class MessageBus
     )
     {
         ArgumentNullException.ThrowIfNull(message);
+        ArgumentNullException.ThrowIfNull(sender);
 
         var messageType = typeof(TMessage);
-        var matchingSubscriptions = GetMatchingSubscriptions(messageType, receivers, tag);
-
-        if (matchingSubscriptions.Count == 0)
+        if (!_subscriptions.TryGetValue(messageType, out var subscriptions))
         {
-            TraceMessage($"没有找到消息类型 {messageType.Name} 的订阅者");
+            if (EnableTracing)
+            {
+                Trace.WriteLine($"[MessageBus] 没有找到消息类型 {messageType.Name} 的订阅者");
+            }
             return;
         }
 
-        TraceMessage(
-            $"发布消息: {messageType.Name} 从 {sender.GetType().Name} 到 {matchingSubscriptions.Count} 个接收者{(tag != null ? $" (标签: {tag})" : "")}"
-        );
+        List<Subscription> matchingSubscriptions;
+        lock (subscriptions)
+        {
+            matchingSubscriptions = subscriptions
+                .Where(s =>
+                    s is { IsActive: true, CancellationToken.IsCancellationRequested: false }
+                    && (tag == null || s.Tag == tag)
+                    && (
+                        receivers == null
+                        || receivers.Any(r =>
+                            r is Type receiverType
+                                ? s.Receiver.GetType() == receiverType
+                                    || s.Receiver.GetType().IsSubclassOf(receiverType)
+                                : r == s.Receiver
+                        )
+                    )
+                )
+                .OrderByDescending(s => s.Priority)
+                .ToList();
+        }
+
+        if (matchingSubscriptions.Count == 0)
+        {
+            if (EnableTracing)
+            {
+                Trace.WriteLine($"[MessageBus] 没有找到匹配的订阅者: {messageType.Name}");
+            }
+            return;
+        }
+
+        if (EnableTracing)
+        {
+            Trace.WriteLine(
+                $"[MessageBus] 发布消息: {messageType.Name} 从 {sender.GetType().Name} 到 {matchingSubscriptions.Count} 个接收者{(tag != null ? $" (标签: {tag})" : "")}"
+            );
+        }
 
         var stopwatch = EnableTracing ? Stopwatch.StartNew() : null;
 
-        try
+        foreach (var subscription in matchingSubscriptions)
         {
-            foreach (var subscription in matchingSubscriptions.Where(s => s.Filter(message)))
-            {
-                subscription.Priority = priority;
-                HandleSubscriptionMessage(message, subscription, sender, cancellationToken);
+            if (!subscription.Filter(message))
+                continue;
 
-                if (oneTime)
+            if (!subscription.IsActive || subscription.CancellationToken.IsCancellationRequested)
+                continue;
+
+            if (subscription.IsWeakReference && !subscription.CheckReceiverAlive())
+            {
+                subscription.IsActive = false;
+                continue;
+            }
+
+            subscription.Priority = priority;
+
+            try
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                subscription.Handler(message, sender);
+            }
+            catch (Exception ex) when (EnableExceptionHandling)
+            {
+                ExceptionHandler?.Invoke(ex, $"处理消息 {messageType.Name} 时发生异常");
+
+                if (EnableTracing)
                 {
-                    subscription.IsActive = false;
+                    Trace.WriteLine(
+                        $"[MessageBus] 异常: 处理消息 {messageType.Name} 时发生异常: {ex.Message}"
+                    );
                 }
             }
-        }
-        finally
-        {
-            if (stopwatch != null)
+
+            if (oneTime)
             {
-                stopwatch.Stop();
-                TraceMessage(
-                    $"完成: 消息 {messageType.Name} 处理耗时 {stopwatch.ElapsedMilliseconds}ms"
-                );
+                subscription.IsActive = false;
             }
+        }
+
+        if (EnableTracing && stopwatch != null)
+        {
+            stopwatch.Stop();
+            Trace.WriteLine(
+                $"[MessageBus] 完成: 消息 {messageType.Name} 处理耗时 {stopwatch.ElapsedMilliseconds}ms"
+            );
         }
     }
 
@@ -488,203 +640,34 @@ public static class MessageBus
     }
 
     /// <summary>
-    /// 记录消息总线追踪信息
+    /// 获取所有消息类型的统计信息
     /// </summary>
-    /// <param name="message">追踪消息</param>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void TraceMessage(string message)
+    /// <returns>消息类型和订阅者数量的字典</returns>
+    public static Dictionary<Type, int> GetSubscriberStatistics()
     {
-        if (EnableTracing)
+        var result = new Dictionary<Type, int>();
+
+        foreach (var kvp in _subscriptions)
         {
-            Trace.WriteLine($"[MessageBus] {message}");
+            result[kvp.Key] = kvp.Value.Count;
         }
+
+        return result;
     }
 
     /// <summary>
-    /// 获取匹配的订阅者列表
+    /// 获取消息组统计信息
     /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static List<Subscription> GetMatchingSubscriptions(
-        Type messageType,
-        IEnumerable<object>? receivers = null,
-        string? tag = null
-    )
+    /// <returns>消息组和消息类型数量的字典</returns>
+    public static Dictionary<string, int> GetMessageGroupStatistics()
     {
-        if (!_subscriptions.TryGetValue(messageType, out var subscriptions))
-            return [];
+        var result = new Dictionary<string, int>();
 
-        var result = _subscriptionListPool.Get();
-        try
+        foreach (var kvp in _messageGroups)
         {
-            // 预先处理 receivers
-            var receiverTypes = new HashSet<Type>();
-            var receiverObjects = new HashSet<object>();
-            if (receivers != null)
-            {
-                foreach (object receiver in receivers)
-                {
-                    if (receiver is Type type)
-                    {
-                        receiverTypes.Add(type);
-                    }
-                    else
-                    {
-                        receiverObjects.Add(receiver);
-                    }
-                }
-            }
-
-            foreach (var subscription in subscriptions)
-            {
-                if (
-                    subscription
-                        is { IsActive: true, CancellationToken.IsCancellationRequested: false }
-                    && (tag == null || subscription.Tag == tag)
-                    && (
-                        receivers == null
-                        || receiverObjects.Contains(subscription.Receiver)
-                        || receiverTypes.Any(t =>
-                            subscription.Receiver.GetType() == t
-                            || subscription.Receiver.GetType().IsSubclassOf(t)
-                        )
-                    )
-                )
-                {
-                    result.Add(subscription);
-                }
-            }
-
-            // 按优先级排序
-            result.Sort((a, b) => b.Priority.CompareTo(a.Priority));
-            return result;
-        }
-        catch
-        {
-            _subscriptionListPool.Return(result);
-            throw;
-        }
-    }
-
-    /// <summary>
-    /// 处理订阅者消息
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void HandleSubscriptionMessage<TMessage>(
-        TMessage message,
-        Subscription subscription,
-        object sender,
-        CancellationToken cancellationToken
-    )
-    {
-        ArgumentNullException.ThrowIfNull(message);
-
-        if (!subscription.IsActive || subscription.CancellationToken.IsCancellationRequested)
-            return;
-
-        if (subscription.IsWeakReference && !subscription.CheckReceiverAlive())
-        {
-            subscription.IsActive = false;
-            return;
+            result[kvp.Key] = kvp.Value.Count;
         }
 
-        try
-        {
-            if (cancellationToken.IsCancellationRequested)
-                return;
-
-            subscription.Handler(message, sender);
-        }
-        catch (Exception ex) when (EnableExceptionHandling)
-        {
-            ExceptionHandler?.Invoke(ex, $"处理消息 {typeof(TMessage).Name} 时发生异常");
-            TraceMessage($"异常: 处理消息 {typeof(TMessage).Name} 时发生异常: {ex.Message}");
-        }
-    }
-
-    /// <summary>
-    /// 处理订阅者消息（异步）
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static async Task HandleSubscriptionMessageAsync<TMessage>(
-        TMessage message,
-        Subscription subscription,
-        object sender,
-        TimeSpan? timeout,
-        CancellationToken cancellationToken
-    )
-    {
-        ArgumentNullException.ThrowIfNull(message);
-
-        if (!subscription.IsActive || subscription.CancellationToken.IsCancellationRequested)
-            return;
-
-        if (subscription.IsWeakReference && !subscription.CheckReceiverAlive())
-        {
-            subscription.IsActive = false;
-            return;
-        }
-
-        await Task.Run(
-            () =>
-            {
-                try
-                {
-                    var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(
-                        subscription.CancellationToken,
-                        cancellationToken
-                    );
-
-                    using var timeoutCts = timeout.HasValue
-                        ? new CancellationTokenSource(timeout.Value)
-                        : null;
-
-                    if (timeoutCts != null)
-                    {
-                        using var finalCts = CancellationTokenSource.CreateLinkedTokenSource(
-                            linkedCts.Token,
-                            timeoutCts.Token
-                        );
-                        if (finalCts.Token.IsCancellationRequested)
-                            return;
-
-                        subscription.Handler(message, sender);
-                    }
-                    else
-                    {
-                        if (linkedCts.Token.IsCancellationRequested)
-                            return;
-
-                        subscription.Handler(message, sender);
-                    }
-                }
-                catch (Exception ex) when (EnableExceptionHandling)
-                {
-                    ExceptionHandler?.Invoke(ex, $"处理消息 {typeof(TMessage).Name} 时发生异常");
-                    TraceMessage(
-                        $"异常: 处理消息 {typeof(TMessage).Name} 时发生异常: {ex.Message}"
-                    );
-                }
-            },
-            cancellationToken
-        );
-    }
-}
-
-/// <summary>
-/// 对象池
-/// </summary>
-internal class ObjectPool<T>(Func<T> factory, Action<T> reset)
-{
-    private readonly ConcurrentBag<T> _pool = [];
-
-    public T Get()
-    {
-        return _pool.TryTake(out var item) ? item : factory();
-    }
-
-    public void Return(T item)
-    {
-        reset(item);
-        _pool.Add(item);
+        return result;
     }
 }

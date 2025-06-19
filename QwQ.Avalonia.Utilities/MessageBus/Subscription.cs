@@ -7,7 +7,7 @@ namespace QwQ.Avalonia.Utilities.MessageBus;
 /// </summary>
 internal class Subscription
 {
-    private readonly WeakReference? _weakReceiver;
+    private readonly WeakReference<object>? _weakReceiver;
     private readonly object? _strongReceiver;
 
     /// <summary>
@@ -30,9 +30,13 @@ internal class Subscription
         CancellationToken cancellationToken = default
     )
     {
+        ArgumentNullException.ThrowIfNull(receiver);
+        ArgumentNullException.ThrowIfNull(filter);
+        ArgumentNullException.ThrowIfNull(handler);
+
         if (useWeakReference)
         {
-            _weakReceiver = new WeakReference(receiver);
+            _weakReceiver = new WeakReference<object>(receiver);
             _strongReceiver = null;
         }
         else
@@ -53,16 +57,31 @@ internal class Subscription
     /// <summary>
     /// 接收者对象
     /// </summary>
-    public object Receiver =>
-        _strongReceiver
-        ?? (_weakReceiver?.Target ?? throw new InvalidOperationException("接收者已被垃圾回收"));
+    public object Receiver
+    {
+        get
+        {
+            if (_strongReceiver != null)
+                return _strongReceiver;
+
+            if (_weakReceiver != null && _weakReceiver.TryGetTarget(out object? target))
+                return target;
+
+            throw new InvalidOperationException("接收者已被垃圾回收");
+        }
+    }
 
     /// <summary>
     /// 检查接收者是否仍然存活（优化版本）
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public bool CheckReceiverAlive() =>
-        _strongReceiver != null || _weakReceiver is { IsAlive: true, Target: not null };
+    public bool CheckReceiverAlive()
+    {
+        if (_strongReceiver != null)
+            return true;
+
+        return _weakReceiver != null && _weakReceiver.TryGetTarget(out _);
+    }
 
     /// <summary>
     /// 消息过滤器
