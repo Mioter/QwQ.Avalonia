@@ -1,0 +1,17 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <ResourceDictionary>
+            <!-- Add Resources Here -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="IndexControl.axaml" />
+                <ResourceInclude Source="ChoiceControl.axaml" />
+                <ResourceInclude Source="AlphabeticalScrollViewer.axaml" />
+
+                <!--<ResourceInclude Source="SwitchControl.axaml"/>-->
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Styles.Resources>
+
+    <StyleInclude Source="RunningText.axaml" />
+</Styles>

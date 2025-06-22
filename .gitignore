@@ -5,3 +5,9 @@
 # 忽略bin和obj文件夹
 bin/
 obj/
+
+# 忽略user文件
+*.user
+
+# 忽略调试信息
+*.stackdump

@@ -105,6 +105,15 @@
             <TabItem Header="TextPath">
                 <pages:TextPathPageView />
             </TabItem>
+            
+            <TabItem Header="AlphabeticalScrollViewer">
+                <pages:AlphabeticalScrollViewerPage />
+            </TabItem>
+
+            <TabItem Header="RunningText">
+                <pages:RunningTextPageView />
+            </TabItem>
+
         </TabControl>
-        </Grid>
+    </Grid>
 </Window>

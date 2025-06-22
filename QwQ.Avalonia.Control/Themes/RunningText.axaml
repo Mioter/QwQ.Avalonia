@@ -1,0 +1,58 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="using:QwQ.Avalonia.Control">
+
+    <Styles.Resources>
+        <ControlTemplate x:Key="RunningText.Template.Horizontal" TargetType="{x:Type local:RunningText}">
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    Padding="{TemplateBinding Padding}"
+                    UseLayoutRounding="{TemplateBinding UseLayoutRounding}">
+                <Canvas x:Name="PART_Canvas" ClipToBounds="{TemplateBinding ClipToBounds}"
+                        Height="{Binding #PART_Txt1.Bounds.Height}" VerticalAlignment="Center">
+                    <TextBlock x:Name="PART_Txt1" Text="{TemplateBinding Text}" />
+                    <TextBlock x:Name="PART_Txt2" Text="{TemplateBinding Text}" />
+                </Canvas>
+            </Border>
+        </ControlTemplate>
+
+        <ControlTemplate x:Key="RunningText.Template.Vertical" TargetType="{x:Type local:RunningText}">
+            <Border Background="{TemplateBinding Background}"
+                    BorderBrush="{TemplateBinding BorderBrush}"
+                    BorderThickness="{TemplateBinding BorderThickness}"
+                    Padding="{TemplateBinding Padding}"
+                    UseLayoutRounding="{TemplateBinding UseLayoutRounding}">
+                <Canvas x:Name="PART_Canvas" ClipToBounds="{TemplateBinding ClipToBounds}"
+                        MinWidth="{TemplateBinding FontSize}" HorizontalAlignment="Center">
+                    <TextBlock x:Name="PART_Txt1" Text="{TemplateBinding Text}" TextWrapping="Wrap"
+                               MaxWidth="{Binding #PART_Canvas.Bounds.Width}" />
+                    <TextBlock x:Name="PART_Txt2" Text="{TemplateBinding Text}" TextWrapping="Wrap"
+                               MaxWidth="{Binding #PART_Canvas.Bounds.Width}" />
+                </Canvas>
+            </Border>
+        </ControlTemplate>
+    </Styles.Resources>
+
+
+    <Style Selector="local|RunningText">
+        <Setter Property="Padding" Value="6 3" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+
+    <Style Selector="local|RunningText[Direction=RightToLeft]">
+        <Setter Property="Template" Value="{StaticResource RunningText.Template.Horizontal}" />
+    </Style>
+    <Style Selector="local|RunningText[Direction=LeftToRight]">
+        <Setter Property="Template" Value="{StaticResource RunningText.Template.Horizontal}" />
+    </Style>
+    <Style Selector="local|RunningText[Direction=BottomToTop]">
+        <Setter Property="Template" Value="{StaticResource RunningText.Template.Vertical}" />
+    </Style>
+    <Style Selector="local|RunningText[Direction=TopToBottom]">
+        <Setter Property="Template" Value="{StaticResource RunningText.Template.Vertical}" />
+    </Style>
+
+</Styles>

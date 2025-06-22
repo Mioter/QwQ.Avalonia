@@ -1,0 +1,176 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
+             xmlns:viewmodels="clr-namespace:Sample.ViewModels"
+             xmlns:models="clr-namespace:Sample.Models"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Sample.Views.Pages.AlphabeticalScrollViewerPage"
+             x:DataType="viewmodels:AlphabeticalScrollViewerPageViewModel">
+
+    <Design.DataContext>
+        <viewmodels:AlphabeticalScrollViewerPageViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="20">
+        <!-- 标题和说明 -->
+        <StackPanel Grid.Row="0" Margin="0,0,0,20">
+            <TextBlock Text="AlphabeticalScrollViewer 示例" 
+                       FontSize="24" 
+                       FontWeight="Bold" 
+                       Margin="0,0,0,10"/>
+            <TextBlock Text="这是一个按字母顺序分组的联系人列表，支持字母索引快速跳转和粘性标题。您可以添加新的联系人来测试动态分组功能。现在支持收藏功能和#分组。"
+                       FontSize="14" 
+                       Foreground="Gray"
+                       TextWrapping="Wrap"/>
+        </StackPanel>
+
+        <!-- 添加联系人表单 -->
+        <Border Grid.Row="1" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="1" 
+                CornerRadius="8"
+                Padding="15"
+                Margin="0,0,0,20">
+            <Grid ColumnDefinitions="*,*,*,*,Auto" RowDefinitions="Auto" ColumnSpacing="10">
+                <StackPanel Grid.Column="0" Spacing="5">
+                    <TextBlock Text="姓名 *" FontSize="12" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding NewName}" 
+                             Watermark="输入姓名"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="1" Spacing="5">
+                    <TextBlock Text="电话" FontSize="12" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding NewPhone}" 
+                             Watermark="输入电话"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="2" Spacing="5">
+                    <TextBlock Text="邮箱" FontSize="12" FontWeight="SemiBold"/>
+                    <TextBox Text="{Binding NewEmail}" 
+                             Watermark="输入邮箱"/>
+                </StackPanel>
+                
+                <StackPanel Grid.Column="3" Spacing="5">
+                    <TextBlock Text="部门" FontSize="12" FontWeight="SemiBold"/>
+                    <ComboBox SelectedItem="{Binding NewDepartment}">
+                        <ComboBoxItem Content="Engineering"/>
+                        <ComboBoxItem Content="Marketing"/>
+                        <ComboBoxItem Content="Sales"/>
+                        <ComboBoxItem Content="HR"/>
+                        <ComboBoxItem Content="Finance"/>
+                        <ComboBoxItem Content="Other"/>
+                    </ComboBox>
+                </StackPanel>
+                
+                <Button Grid.Column="4" 
+                        Content="添加联系人"
+                        Command="{Binding AddContactCommand}"
+                        VerticalAlignment="Bottom"
+                        Padding="15,8"/>
+            </Grid>
+        </Border>
+
+        <!-- AlphabeticalScrollViewer 控件 -->
+        <Border Grid.Row="2" 
+                BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
+                BorderThickness="1" 
+                CornerRadius="8">
+            <control:AlphabeticalScrollViewer ItemsSource="{Binding Contacts}"
+                                             Favorites="{Binding Favorites}"
+                                             LetterMemberPath="Name">
+                <control:AlphabeticalScrollViewer.ItemTemplate>
+                    <DataTemplate x:DataType="models:ContactItem">
+                        <Border Margin="10,5" 
+                                Padding="15" 
+                                Background="{DynamicResource SystemControlBackgroundBaseLowBrush}"
+                                CornerRadius="6">
+                            <Grid ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto,Auto">
+                                <!-- 姓名 -->
+                                <TextBlock Grid.Column="0" 
+                                           Grid.Row="0"
+                                           Text="{Binding Name}" 
+                                           FontWeight="SemiBold" 
+                                           FontSize="16"/>
+                                
+                                <!-- 部门标签 -->
+                                <Border Grid.Column="1" 
+                                        Grid.Row="0"
+                                        Background="{DynamicResource SystemAccentColorLight1}"
+                                        CornerRadius="12"
+                                        Padding="8,4"
+                                        Margin="0,0,10,0">
+                                    <TextBlock Text="{Binding Department}" 
+                                               FontSize="12" 
+                                               Foreground="{DynamicResource SystemAccentColorLight3}"/>
+                                </Border>
+                                
+                                <!-- 收藏按钮 -->
+                                <Button Grid.Column="2" 
+                                        Grid.Row="0"
+                                        Content="♥"
+                                        Command="{Binding $parent[UserControl].((viewmodels:AlphabeticalScrollViewerPageViewModel)DataContext).AddToFavoritesCommand}"
+                                        CommandParameter="{Binding}"
+                                        Padding="8,4"
+                                        FontSize="12"
+                                        Foreground="Red"
+                                        Background="Transparent"/>
+                                
+                                <!-- 删除按钮 -->
+                                <Button Grid.Column="3" 
+                                        Grid.Row="0"
+                                        Content="删除"
+                                        Command="{Binding $parent[UserControl].((viewmodels:AlphabeticalScrollViewerPageViewModel)DataContext).RemoveContactCommand}"
+                                        CommandParameter="{Binding}"
+                                        Padding="8,4"
+                                        FontSize="12"/>
+                                
+                                <!-- 联系信息 -->
+                                <StackPanel Grid.Column="0" 
+                                            Grid.ColumnSpan="4"
+                                            Grid.Row="1" 
+                                            Margin="0,8,0,0" 
+                                            Spacing="4">
+                                    <TextBlock Text="{Binding Phone}" 
+                                               FontSize="14" 
+                                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                    <TextBlock Text="{Binding Email}" 
+                                               FontSize="14" 
+                                               Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </control:AlphabeticalScrollViewer.ItemTemplate>
+            </control:AlphabeticalScrollViewer>
+        </Border>
+
+        <!-- 底部信息 -->
+        <StackPanel Grid.Row="3" 
+                    Margin="0,20,0,0" 
+                    Orientation="Horizontal" 
+                    HorizontalAlignment="Center"
+                    Spacing="20">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="总联系人数量: " 
+                           FontSize="14" 
+                           VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Contacts.Count}" 
+                           FontSize="14" 
+                           FontWeight="Bold" 
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="收藏数量: " 
+                           FontSize="14" 
+                           VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Favorites.Count}" 
+                           FontSize="14" 
+                           FontWeight="Bold" 
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+
+</UserControl>

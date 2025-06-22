@@ -1,0 +1,74 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:controls="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control">
+
+    <ControlTheme x:Key="{x:Type controls:AlphabeticalScrollViewer}" TargetType="controls:AlphabeticalScrollViewer">
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Grid ColumnDefinitions="*, Auto">
+                    <!-- Main Content Area -->
+                    <Grid Grid.Column="0">
+                        <ScrollViewer Name="PART_ScrollViewer" VerticalScrollBarVisibility="Hidden">
+                            <ItemsControl Name="PART_ItemsControl" ItemsSource="{TemplateBinding GroupedItems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <TextBlock Name="PART_GroupHeader" 
+                                                       Text="{Binding Key}" 
+                                                       FontWeight="Bold" 
+                                                       FontSize="20" 
+                                                       Margin="5"
+                                                       Foreground="{DynamicResource SemiColorText1}"/>
+                                            <ItemsControl ItemsSource="{Binding Items}"
+                                                          ItemTemplate="{Binding $parent[controls:AlphabeticalScrollViewer].ItemTemplate}"/>
+                                            <Separator/>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                        
+                        <!-- Sticky Header -->
+                        <Border Name="PART_StickyHeader"
+                                VerticalAlignment="Top"
+                                IsVisible="{TemplateBinding StickyHeaderIsVisible}"
+                                Background="{DynamicResource SemiColorBackground0}">
+                            <TextBlock Text="{TemplateBinding StickyHeaderText}" 
+                                       FontWeight="Bold" 
+                                       FontSize="20" 
+                                       Margin="5"
+                                       Foreground="{DynamicResource SemiColorText1}"/>
+                        </Border>
+                    </Grid>
+                    
+                    <!-- Index Bar -->
+                    <ItemsControl Name="PART_IndexBar" Grid.Column="1" ItemsSource="{TemplateBinding Alphabet}">
+                        <ItemsControl.Styles>
+                            <Style Selector="Button.current">
+                                <Setter Property="FontWeight" Value="Bold"/>
+                                <Setter Property="Foreground" Value="{DynamicResource SemiLightBlue5Color}"/>
+                            </Style>
+                        </ItemsControl.Styles>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding Letter}"
+                                        Command="{Binding $parent[controls:AlphabeticalScrollViewer].ScrollToLetterCommand}"
+                                        CommandParameter="{Binding Letter}"
+                                        IsEnabled="{Binding IsEnabled}"
+                                        Foreground="{DynamicResource SemiColorText1}"
+                                        FontWeight="Normal"
+                                        Background="Transparent"
+                                        Classes.current="{Binding IsCurrent}"/>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Vertical" ItemSpacing="5" LineSpacing="5"/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </ControlTheme>
+</ResourceDictionary> 
