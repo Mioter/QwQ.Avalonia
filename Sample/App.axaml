@@ -9,6 +9,7 @@
     <Application.Styles>
         <semi:SemiTheme Locale="zh-CN" />     
         <StyleInclude Source="avares://QwQ.Avalonia.Control/Themes/_indexes.axaml" />
+        
     </Application.Styles>
 
     <Application.Resources>

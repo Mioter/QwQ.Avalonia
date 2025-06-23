@@ -77,9 +77,8 @@
                 BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" 
                 BorderThickness="1" 
                 CornerRadius="8">
-            <control:AlphabeticalScrollViewer ItemsSource="{Binding Contacts}"
-                                             Favorites="{Binding Favorites}"
-                                             LetterMemberPath="Name">
+            <control:AlphabeticalScrollViewer x:Name="AlphabeticalScrollViewer" ItemsSource="{Binding Contacts}"
+                                             Favorites="{Binding Favorites}">
                 <control:AlphabeticalScrollViewer.ItemTemplate>
                     <DataTemplate x:DataType="models:ContactItem">
                         <Border Margin="10,5" 

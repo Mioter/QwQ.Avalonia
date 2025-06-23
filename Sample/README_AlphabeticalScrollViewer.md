@@ -6,16 +6,16 @@ AlphabeticalScrollViewer 是一个支持按字母顺序分组的滚动视图控�
 
 ### 核心功能
 - **MVVM 支持**：通过 `ItemsSource` 和 `ItemTemplate` 进行数据绑定
-- **字母分组**：自动按指定属性（通过 `LetterMemberPath`）的首字母进行分组
+- **字母分组**：通过 `LetterSelector` 委托自定义分组逻辑，支持AOT
 - **字母索引导航**：右侧字母导航栏支持快速跳转到对应分组
 - **粘性标题**：滚动时当前分组标题会粘在顶部
-- **数字分组**：以数字开头的项目会自动归类到 `#` 分组
+- **数字分组**：以非A-Z字母开头的项目会自动归类到 `#` 分组
 - **收藏功能**：支持收藏项目，收藏项会显示在列表最前面
 
 ### 字母导航栏
 - **收藏按钮 (♥)**：位于导航栏顶部，点击可跳转到收藏区域
 - **A-Z 字母**：26个英文字母按钮，支持快速导航
-- **# 按钮**：位于导航栏底部，包含所有以数字开头的项目
+- **# 按钮**：位于导航栏底部，包含所有非A-Z字母开头的项目
 
 ### 交互功能
 - **点击导航**：点击字母按钮可快速跳转到对应分组
@@ -29,8 +29,8 @@ AlphabeticalScrollViewer 是一个支持按字母顺序分组的滚动视图控�
 
 ```xml
 <control:AlphabeticalScrollViewer 
-    ItemsSource="{Binding Contacts}"
-    LetterMemberPath="Name">
+    x:Name="AlphabeticalScrollViewer"
+    ItemsSource="{Binding Contacts}">
     <control:AlphabeticalScrollViewer.ItemTemplate>
         <DataTemplate>
             <!-- 自定义项目模板 -->
@@ -39,27 +39,43 @@ AlphabeticalScrollViewer 是一个支持按字母顺序分组的滚动视图控�
 </control:AlphabeticalScrollViewer>
 ```
 
+### 设置分组逻辑（代码中设置 LetterSelector）
+
+```csharp
+// 在页面/控件的代码中设置
+AlphabeticalScrollViewer.LetterSelector = obj => {
+    var contact = obj as ContactItem;
+    if (contact != null && !string.IsNullOrEmpty(contact.Name))
+    {
+        char c = char.ToUpper(contact.Name[0]);
+        return (c >= 'A' && c <= 'Z') ? c : '#';
+    }
+    return '#';
+};
+```
+> 注意：LetterSelector 只能在代码中设置，不能通过XAML绑定。
+
 ### 带收藏功能
 
 ```xml
 <control:AlphabeticalScrollViewer 
+    x:Name="AlphabeticalScrollViewer"
     ItemsSource="{Binding Contacts}"
-    Favorites="{Binding Favorites}"
-    LetterMemberPath="Name">
+    Favorites="{Binding Favorites}">
     <!-- 项目模板 -->
 </control:AlphabeticalScrollViewer>
 ```
 
 ## 属性说明
 
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `ItemsSource` | `IEnumerable` | 数据源集合 |
-| `LetterMemberPath` | `string` | 用于分组的属性路径 |
-| `Favorites` | `IEnumerable` | 收藏项目集合 |
-| `ItemTemplate` | `IDataTemplate` | 项目模板 |
-| `GroupedItems` | `IReadOnlyList<LetterGroup>` | 分组后的项目（只读） |
-| `Alphabet` | `IReadOnlyList<AlphabetLetterViewModel>` | 字母导航栏数据（只读） |
+| 属性               | 类型                                       | 说明            |
+|------------------|------------------------------------------|---------------|
+| `ItemsSource`    | `IEnumerable`                            | 数据源集合         |
+| `LetterSelector` | `Func<object, char>`                     | 用于分组的委托（代码设置） |
+| `Favorites`      | `IEnumerable`                            | 收藏项目集合        |
+| `ItemTemplate`   | `IDataTemplate`                          | 项目模板          |
+| `GroupedItems`   | `IReadOnlyList<LetterGroup>`             | 分组后的项目（只读）    |
+| `Alphabet`       | `IReadOnlyList<AlphabetLetterViewModel>` | 字母导航栏数据（只读）   |
 
 ## 示例功能
 
@@ -75,20 +91,10 @@ AlphabeticalScrollViewer 是一个支持按字母顺序分组的滚动视图控�
 - 从收藏中移除联系人
 - 收藏项目显示在列表顶部
 
-### 3. 数字分组测试
-- 包含以数字开头的联系人（如 "123 Company", "2Fast Delivery"）
-- 这些项目会自动归类到 `#` 分组
+### 3. 非字母分组测试
+- 包含以数字、特殊字符、中文等开头的联系人，这些项目会自动归类到 `#` 分组
 
-### 4. 非字母分组测试
-- 包含各种非字母开头的联系人：
-  - 数字开头：`7-Eleven`, `99 Cents Store`
-  - 特殊字符：`@Tech Support`, `&More Services`, `!Important Contact`, `?Help Desk`
-  - 中文字符：`中文联系人`
-  - 日文字符：`日本語名`
-  - 韩文字符：`한국어 이름`
-- 所有这些非A-Z字母开头的项目都会归类到 `#` 分组
-
-### 5. 交互体验
+### 4. 交互体验
 - 点击字母导航栏快速跳转
 - 滚动时粘性标题显示当前分组
 
@@ -107,9 +113,8 @@ public class ContactItem
 ## 技术实现
 
 ### 分组逻辑
-- 使用反射获取指定属性的值
-- 只有A-Z字母字符按字母分组
-- 所有其他字符（数字、特殊字符、中文字符等）都归类到 `#` 分组
+- 通过 LetterSelector 委托自定义分组逻辑，AOT友好
+- 只有A-Z字母字符按字母分组，其他全部归类到#分组
 - 收藏项显示在列表最前面
 
 ### 收藏功能
@@ -123,26 +128,10 @@ public class ContactItem
 - 支持收藏区域快速跳转
 
 ### 样式统一化
-- **问题**：收藏按钮（♥）和#按钮使用了特殊样式，与其他字母按钮外观不一致
-- **修复**：移除特殊按钮的样式定义，让所有导航按钮保持一致的外观
+- 所有导航按钮保持一致的外观
 
 ### 分组逻辑优化
-- **问题**：只有数字字符归类到#分组，其他特殊字符和中文字符仍然按原字符分组
-- **修复**：修改分组逻辑，使除了A-Z字母外的所有首字符都归类到#分组，包括数字、特殊字符、中文字符等
-
-## 最近修复
-
-### 数字分组问题
-- **问题**：以数字开头的项目没有正确归类到 `#` 分组，而是单独显示为数字分组
-- **修复**：在 `GetLetterFromItem` 方法中添加数字检测逻辑，确保数字字符返回 `#`
-
-### 收藏数据绑定问题
-- **问题**：收藏功能的数据绑定有问题，添加收藏后界面不立即更新
-- **修复**：添加对 `Favorites` 集合变化的监听，确保收藏操作后立即更新界面
-
-### #分组排序问题
-- **问题**：`#` 分组显示在收藏分组下方，而不是在所有字母分组下方
-- **修复**：修改分组排序逻辑，使用 `OrderBy(g => g.Key == '#' ? 'Z' + 1 : g.Key)` 确保 `#` 分组排在所有字母之后
+- 除A-Z字母外的所有首字符都归类到#分组，包括数字、特殊字符、中文字符等
 
 ## 使用建议
 

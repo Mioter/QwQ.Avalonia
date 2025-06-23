@@ -110,6 +110,10 @@
                 <pages:AlphabeticalScrollViewerPage />
             </TabItem>
 
+            <TabItem Header="UniversalGroupScrollViewer">
+                <pages:UniversalGroupScrollViewerPage />
+            </TabItem>
+
             <TabItem Header="RunningText">
                 <pages:RunningTextPageView />
             </TabItem>

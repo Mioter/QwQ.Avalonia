@@ -64,7 +64,7 @@ public partial class ImageCroppingPageViewModel : ViewModelBase
             var bitmap = new Bitmap(stream);
             SourceImage = bitmap;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // ignored
         }
@@ -104,7 +104,7 @@ public partial class ImageCroppingPageViewModel : ViewModelBase
             await using var stream = await file.OpenWriteAsync();
             croppedImage.Save(stream);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // ignored
         }

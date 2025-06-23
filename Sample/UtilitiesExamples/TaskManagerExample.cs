@@ -369,6 +369,9 @@ public static class TaskManagerExample
         Console.WriteLine($"总耗时: {result.ExecutionTime.TotalSeconds:F1}秒");
         Console.WriteLine("处理结果:");
 
+        if (result.Results == null)
+            return;
+        
         foreach (string itemResult in result.Results)
         {
             Console.WriteLine($"- {itemResult}");

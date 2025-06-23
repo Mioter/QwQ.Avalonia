@@ -10,213 +10,110 @@
     d:DesignHeight="450"
     d:DesignWidth="800"
     x:DataType="vm:RunningTextPageViewModel">
+    
+    <UserControl.Styles>
+        <!-- RunningText 占位符样式 -->
+        <Style Selector="controls|RunningText:placeholder">
+            <Setter Property="Foreground" Value="Gray"/>
+            <Setter Property="Opacity" Value="0.6"/>
+            <Setter Property="FontStyle" Value="Italic"/>
+        </Style>
+    </UserControl.Styles>
 
     <ScrollViewer>
-        <StackPanel Margin="20" Spacing="20">
-            
-            <!-- 标题 -->
-            <TextBlock Text="RunningText 控件示例" 
-                       FontSize="24" 
-                       FontWeight="Bold" 
-                       HorizontalAlignment="Center" />
-            
-            <!-- 基本用法示例 -->
-            <Border Background="{DynamicResource CardBackgroundBrush}" 
-                    BorderBrush="{DynamicResource CardBorderBrush}" 
-                    BorderThickness="1" 
-                    CornerRadius="8" 
-                    Padding="20">
-                <StackPanel Spacing="15">
-                    <TextBlock Text="基本用法" FontSize="18" FontWeight="SemiBold" />
-                    
-                    <controls:RunningText Text="{Binding SampleText}" 
-                                          Speed="{Binding Speed}"
-                                          Direction="{Binding Direction}"
-                                          Background="{DynamicResource SystemAccentColorLight1}"
-                                          Foreground="{DynamicResource SystemAccentColorDark1}"
-                                          Padding="10,5"
-                                          Height="40" />
-                    
-                    <TextBlock Text="这是一个基本的RunningText控件示例，文本会按照设定的方向和速度进行滚动。" 
-                               TextWrapping="Wrap" 
-                               Classes="Secondary" />
-                </StackPanel>
-            </Border>
+        <StackPanel Margin="20" Spacing="18">
+            <TextBlock Text="RunningText 控件功能演示" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,10"/>
 
-            <!-- 不同方向的示例 -->
-            <Border Background="{DynamicResource CardBackgroundBrush}" 
-                    BorderBrush="{DynamicResource CardBorderBrush}" 
-                    BorderThickness="1" 
-                    CornerRadius="8" 
-                    Padding="20">
-                <StackPanel Spacing="15">
-                    <TextBlock Text="不同滚动方向" FontSize="18" FontWeight="SemiBold" />
-                    
-                    <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" RowSpacing="10">
-                        <!-- 从右到左 -->
-                        <StackPanel Grid.Column="0" Grid.Row="0" Spacing="5">
-                            <TextBlock Text="从右到左 (RightToLeft)" FontWeight="SemiBold" />
-                            <controls:RunningText Text="从右到左滚动的文本" 
-                                                  Direction="RightToLeft"
-                                                  Speed="100"
-                                                  Height="30"
-                                                  Background="{DynamicResource SystemAccentColorLight2}"
-                                                  Padding="8,4" />
-                        </StackPanel>
-                        
-                        <!-- 从左到右 -->
-                        <StackPanel Grid.Column="1" Grid.Row="0" Spacing="5">
-                            <TextBlock Text="从左到右 (LeftToRight)" FontWeight="SemiBold" />
-                            <controls:RunningText Text="从左到右滚动的文本" 
-                                                  Direction="LeftToRight"
-                                                  Speed="100"
-                                                  Height="30"
-                                                  Background="{DynamicResource SystemAccentColorLight2}"
-                                                  Padding="8,4" />
-                        </StackPanel>
-                        
-                        <!-- 从下到上 -->
-                        <StackPanel Grid.Column="0" Grid.Row="1" Spacing="5">
-                            <TextBlock Text="从下到上 (BottomToTop)" FontWeight="SemiBold" />
-                            <controls:RunningText Text="从下到上滚动的文本" 
-                                                  Direction="BottomToTop"
-                                                  Speed="80"
-                                                  Height="60"
-                                                  Background="{DynamicResource SystemAccentColorLight2}"
-                                                  Padding="8,4" />
-                        </StackPanel>
-                        
-                        <!-- 从上到下 -->
-                        <StackPanel Grid.Column="1" Grid.Row="1" Spacing="5">
-                            <TextBlock Text="从上到下 (TopToBottom)" FontWeight="SemiBold" />
-                            <controls:RunningText Text="从上到下滚动的文本" 
-                                                  Direction="TopToBottom"
-                                                  Speed="80"
-                                                  Height="60"
-                                                  Background="{DynamicResource SystemAccentColorLight2}"
-                                                  Padding="8,4" />
-                        </StackPanel>
-                    </Grid>
+            <!-- 1. 基础用法 -->
+            <Expander Header="基础用法">
+                <StackPanel Spacing="8">
+                    <controls:RunningText Text="这是一个基础横向滚动示例" Height="32" Speed="100" Padding="8,4"/>
+                    <controls:RunningText Text="这是一个基础纵向滚动示例" Direction="BottomToTop" Height="48" Speed="80" Padding="8,4"/>
                 </StackPanel>
-            </Border>
+            </Expander>
 
-            <!-- 控制面板 -->
-            <Border Background="{DynamicResource CardBackgroundBrush}" 
-                    BorderBrush="{DynamicResource CardBorderBrush}" 
-                    BorderThickness="1" 
-                    CornerRadius="8" 
-                    Padding="20">
-                <StackPanel Spacing="15">
-                    <TextBlock Text="控制面板" FontSize="18" FontWeight="SemiBold" />
-                    
-                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto" RowSpacing="10">
-                        
-                        <!-- 文本选择 -->
-                        <TextBlock Grid.Column="0" Grid.Row="0" Text="文本内容:" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" Grid.Row="0" 
-                                  ItemsSource="{Binding SampleTexts}"
-                                  SelectedItem="{Binding SampleText}"
-                                  HorizontalAlignment="Stretch" />
-                        
-                        <!-- 滚动方向 -->
-                        <TextBlock Grid.Column="0" Grid.Row="1" Text="滚动方向:" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" Grid.Row="1" 
-                                  ItemsSource="{Binding Directions}"
-                                  SelectedItem="{Binding Direction}"
-                                  HorizontalAlignment="Stretch" />
-                        
-                        <!-- 滚动速度 -->
-                        <TextBlock Grid.Column="0" Grid.Row="2" Text="滚动速度:" VerticalAlignment="Center" />
-                        <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" Spacing="10">
-                            <Slider Value="{Binding Speed}" 
-                                    Minimum="20" 
-                                    Maximum="300" 
-                                    Width="200" />
-                            <TextBlock Text="{Binding Speed, StringFormat='{}{0:F0}'}" 
-                                       VerticalAlignment="Center" 
-                                       MinWidth="40" />
-                        </StackPanel>
-                        
-                        <!-- 间距设置 -->
-                        <TextBlock Grid.Column="0" Grid.Row="3" Text="文本间距:" VerticalAlignment="Center" />
-                        <StackPanel Grid.Column="1" Grid.Row="3" Orientation="Horizontal" Spacing="10">
-                            <Slider Value="{Binding Space}" 
-                                    Minimum="0" 
-                                    Maximum="200" 
-                                    Width="200" />
-                            <TextBlock Text="{Binding Space, StringFormat='{}{0:F0}'}" 
-                                       VerticalAlignment="Center" 
-                                       MinWidth="40" />
-                            <Button Content="自动" 
-                                    Command="{Binding SetAutoSpaceCommand}"
-                                    HorizontalAlignment="Right" />
-                        </StackPanel>
-                    </Grid>
+            <!-- 2. 占位符功能 -->
+            <Expander Header="占位符功能">
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <controls:RunningText Text="有内容" PlaceholderText="请输入..." Width="180" Height="32"/>
+                    <controls:RunningText Text="" PlaceholderText="请输入..." Width="180" Height="32"/>
                 </StackPanel>
-            </Border>
+            </Expander>
 
-            <!-- 高级示例 -->
-            <Border Background="{DynamicResource CardBackgroundBrush}" 
-                    BorderBrush="{DynamicResource CardBorderBrush}" 
-                    BorderThickness="1" 
-                    CornerRadius="8" 
-                    Padding="20">
-                <StackPanel Spacing="15">
-                    <TextBlock Text="高级示例" FontSize="18" FontWeight="SemiBold" />
-                    
-                    <!-- 带样式的滚动文本 -->
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="带样式的滚动文本" FontWeight="SemiBold" />
-                        <controls:RunningText Text="🎉 这是一个带有表情符号和特殊样式的滚动文本示例！🎊"
-                                              Direction="RightToLeft"
-                                              Speed="150"
-                                              Space="50"
-                                              Height="50"
-                                              FontSize="16"
-                                              FontWeight="Bold"
-                                              Foreground="Blue"
-                                              Padding="15,10" />
+            <!-- 3. 滚动模式 -->
+            <Expander Header="滚动模式 (Mode)">
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Cycle(循环)" FontSize="12"/>
+                        <controls:RunningText Text="循环滚动文本" Mode="Cycle" Height="32" Speed="100" Width="180"/>
                     </StackPanel>
-                    
-                    <!-- 多行文本滚动 -->
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="多行文本滚动" FontWeight="SemiBold" />
-                        <controls:RunningText Text="这是第一行文本&#x0a;这是第二行文本&#x0a;这是第三行文本"
-                                              Direction="BottomToTop"
-                                              Speed="60"
-                                              Height="80"
-                                              Background="{DynamicResource SystemAccentColorLight3}"
-                                              Padding="10,8" />
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Bounce(往返)" FontSize="12"/>
+                        <controls:RunningText Text="往返滚动文本" Mode="Bounce" Height="32" Speed="100" Width="180"/>
                     </StackPanel>
                 </StackPanel>
-            </Border>
+            </Expander>
 
-            <!-- 说明文档 -->
-            <Border Background="{DynamicResource CardBackgroundBrush}" 
-                    BorderBrush="{DynamicResource CardBorderBrush}" 
-                    BorderThickness="1" 
-                    CornerRadius="8" 
-                    Padding="20">
-                <StackPanel Spacing="10">
-                    <TextBlock Text="使用说明" FontSize="18" FontWeight="SemiBold" />
-                    
-                    <TextBlock Text="RunningText 控件属性说明：" FontWeight="SemiBold" />
-                    <StackPanel Margin="10,0,0,0" Spacing="5">
-                        <TextBlock Text="• Text: 要滚动的文本内容" />
-                        <TextBlock Text="• Direction: 滚动方向 (RightToLeft, LeftToRight, BottomToTop, TopToBottom)" />
-                        <TextBlock Text="• Speed: 滚动速度，单位为像素/秒" />
-                        <TextBlock Text="• Space: 文本间距，设置为 NaN 时自动计算" />
-                        <TextBlock Text="• 支持所有标准的 Control 属性，如 Background, Foreground, FontSize 等" />
+            <!-- 4. 滚动行为 -->
+            <Expander Header="滚动行为 (Behavior)">
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Auto(自动)" FontSize="12"/>
+                        <controls:RunningText Text="短文本" Behavior="Auto" Height="32" Width="120"/>
                     </StackPanel>
-                    
-                    <TextBlock Text="注意事项：" FontWeight="SemiBold" Margin="0,10,0,0" />
-                    <StackPanel Margin="10,0,0,0" Spacing="5">
-                        <TextBlock Text="• 控件会自动处理文本的连续滚动效果" />
-                        <TextBlock Text="• 当控件不可见时会自动停止动画以节省性能" />
-                        <TextBlock Text="• 支持动态更改属性，动画会自动重新开始" />
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Always(强制)" FontSize="12"/>
+                        <controls:RunningText Text="短文本" Behavior="Always" Height="32" Width="120"/>
+                    </StackPanel>
+                    <StackPanel Spacing="2">
+                        <TextBlock Text="Pause(暂停)" FontSize="12"/>
+                        <controls:RunningText Text="长文本内容，但暂停滚动" Behavior="Pause" Height="32" Width="180"/>
                     </StackPanel>
                 </StackPanel>
-            </Border>
+            </Expander>
+
+            <!-- 5. 文本对齐 -->
+            <Expander Header="文本对齐 (TextAlignment)">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="水平方向对齐" FontSize="12"/>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <controls:RunningText Text="左对齐" TextAlignment="Left" Behavior="Auto" Height="32" Width="100"/>
+                        <controls:RunningText Text="居中对齐" TextAlignment="Center" Behavior="Auto" Height="32" Width="100"/>
+                        <controls:RunningText Text="右对齐" TextAlignment="Right" Behavior="Auto" Height="32" Width="100"/>
+                    </StackPanel>
+                    <TextBlock Text="垂直方向对齐" FontSize="12" Margin="0,8,0,0"/>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <controls:RunningText Text="垂直左" Direction="TopToBottom" TextAlignment="Left" Behavior="Auto" Height="80" Width="32"/>
+                        <controls:RunningText Text="垂直中" Direction="TopToBottom" TextAlignment="Center" Behavior="Auto" Height="80" Width="32"/>
+                        <controls:RunningText Text="垂直右" Direction="TopToBottom" TextAlignment="Right" Behavior="Auto" Height="80" Width="32"/>
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
+
+            <!-- 6. 高级样式 -->
+            <Expander Header="高级样式/自定义">
+                <StackPanel Spacing="8">
+                    <controls:RunningText Text="🎉 带表情和自定义样式的滚动文本！🎊" Direction="RightToLeft" Speed="150" Space="50" Height="40" FontSize="16" FontWeight="Bold" Foreground="Blue" Padding="15,10"/>
+                    <controls:RunningText Text="多行文本滚动\n第二行\n第三行" Direction="BottomToTop" Speed="60" Height="60" Background="LightGray" Padding="10,8"/>
+                </StackPanel>
+            </Expander>
+
+            <!-- 7. 属性说明 -->
+            <Expander Header="属性说明/注意事项" IsExpanded="False">
+                <StackPanel Spacing="2">
+                    <TextBlock Text="• Text: 要滚动的文本内容"/>
+                    <TextBlock Text="• PlaceholderText: 占位符文本，Text为空时显示"/>
+                    <TextBlock Text="• Direction: 滚动方向 (RightToLeft, LeftToRight, BottomToTop, TopToBottom)"/>
+                    <TextBlock Text="• Mode: 滚动模式 (Cycle, Bounce)"/>
+                    <TextBlock Text="• Behavior: 滚动行为 (Auto, Always, Pause)"/>
+                    <TextBlock Text="• TextAlignment: 文本对齐方式 (Left, Center, Right)"/>
+                    <TextBlock Text="• Speed: 滚动速度 (像素/秒)"/>
+                    <TextBlock Text="• Space: 文本间距，NaN为自动"/>
+                    <TextBlock Text="• 支持所有标准Control属性，如Background, Foreground, FontSize等"/>
+                    <TextBlock Text="• 占位符样式可通过 ':placeholder' 伪类自定义"/>
+                    <TextBlock Text="• 文本对齐仅在无需滚动时生效"/>
+                </StackPanel>
+            </Expander>
         </StackPanel>
     </ScrollViewer>
 </UserControl> 

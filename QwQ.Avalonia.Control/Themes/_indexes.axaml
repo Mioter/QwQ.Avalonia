@@ -7,7 +7,7 @@
                 <ResourceInclude Source="IndexControl.axaml" />
                 <ResourceInclude Source="ChoiceControl.axaml" />
                 <ResourceInclude Source="AlphabeticalScrollViewer.axaml" />
-
+                <ResourceInclude Source="UniversalGroupScrollViewer.axaml"/>
                 <!--<ResourceInclude Source="SwitchControl.axaml"/>-->
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

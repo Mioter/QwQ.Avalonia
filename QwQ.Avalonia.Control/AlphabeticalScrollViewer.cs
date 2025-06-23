@@ -88,13 +88,13 @@ public class AlphabeticalScrollViewer : TemplatedControl
         set => SetValue(ItemsSourceProperty, value);
     }
 
-    public static readonly StyledProperty<string?> LetterMemberPathProperty =
-        AvaloniaProperty.Register<AlphabeticalScrollViewer, string?>(nameof(LetterMemberPath));
+    public static readonly StyledProperty<Func<object, char>?> LetterSelectorProperty =
+        AvaloniaProperty.Register<AlphabeticalScrollViewer, Func<object, char>?>(nameof(LetterSelector));
 
-    public string? LetterMemberPath
+    public Func<object, char>? LetterSelector
     {
-        get => GetValue(LetterMemberPathProperty);
-        set => SetValue(LetterMemberPathProperty, value);
+        get => GetValue(LetterSelectorProperty);
+        set => SetValue(LetterSelectorProperty, value);
     }
 
     public static readonly StyledProperty<IReadOnlyList<LetterGroup>> GroupedItemsProperty =
@@ -176,7 +176,7 @@ public class AlphabeticalScrollViewer : TemplatedControl
     {
         CurrentLetterProperty.Changed.AddClassHandler<AlphabeticalScrollViewer>((x, e) => x.OnCurrentLetterChanged(e));
         ItemsSourceProperty.Changed.AddClassHandler<AlphabeticalScrollViewer>((x, e) => x.OnItemsSourceChanged(e));
-        LetterMemberPathProperty.Changed.AddClassHandler<AlphabeticalScrollViewer>((x, e) => x.OnLetterMemberPathChanged(e));
+        LetterSelectorProperty.Changed.AddClassHandler<AlphabeticalScrollViewer>((x, e) => x.OnLetterSelectorChanged(e));
         FavoritesProperty.Changed.AddClassHandler<AlphabeticalScrollViewer>((x, e) => x.OnFavoritesChanged(e));
     }
 
@@ -198,7 +198,7 @@ public class AlphabeticalScrollViewer : TemplatedControl
         GroupItems();
     }
 
-    private void OnLetterMemberPathChanged(AvaloniaPropertyChangedEventArgs obj)
+    private void OnLetterSelectorChanged(AvaloniaPropertyChangedEventArgs e)
     {
         GroupItems();
     }
@@ -453,52 +453,19 @@ public class AlphabeticalScrollViewer : TemplatedControl
     
     private char GetLetterFromItem(object item)
     {
-        if (string.IsNullOrEmpty(LetterMemberPath)) return '#';
-
-        var type = item.GetType();
-        if (!_letterSelectors.TryGetValue(type, out var selector))
-        {
-            var prop = type.GetProperty(LetterMemberPath);
-            if (prop == null)
-            {
-                selector = _ => '#';
-            }
-            else
-            {
-                selector = obj =>
-                {
-                    object? value = prop.GetValue(obj);
-                    if (value is char c) 
-                    {
-                        char upperC = char.ToUpper(c);
-                        // 只有A-Z字母才按字母分组，其他所有字符都归类到#
-                        return upperC >= 'A' && upperC <= 'Z' ? upperC : '#';
-                    }
-                    if (value is string s && !string.IsNullOrEmpty(s)) 
-                    {
-                        char firstChar = char.ToUpper(s[0]);
-                        // 只有A-Z字母才按字母分组，其他所有字符都归类到#
-                        return firstChar >= 'A' && firstChar <= 'Z' ? firstChar : '#';
-                    }
-                    return '#';
-                };
-            }
-            _letterSelectors[type] = selector;
-        }
-
-        return selector(item);
+        if (LetterSelector != null)
+            return LetterSelector(item);
+        return '#';
     }
 
     private void GroupItems()
     {
-        if (ItemsSource is null || string.IsNullOrEmpty(LetterMemberPath))
+        if (ItemsSource is null || LetterSelector == null)
         {
             GroupedItems = new List<LetterGroup>();
             UpdateAlphabetState();
             return;
         }
-
-        _letterSelectors.Clear();
 
         try
         {

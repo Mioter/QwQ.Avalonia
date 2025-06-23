@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:control="clr-namespace:QwQ.Avalonia.Control;assembly=QwQ.Avalonia.Control"
+             xmlns:viewmodels="clr-namespace:Sample.ViewModels"
+             xmlns:models="clr-namespace:Sample.Models"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="Sample.Views.Pages.UniversalGroupScrollViewerPage"
+             x:DataType="viewmodels:AlphabeticalScrollViewerPageViewModel">
+
+    <Design.DataContext>
+        <viewmodels:AlphabeticalScrollViewerPageViewModel/>
+    </Design.DataContext>
+
+    <Grid RowDefinitions="Auto,*,Auto" Margin="20">
+        <TextBlock Grid.Row="0" Text="UniversalGroupScrollViewer 示例（按部门分组）" FontSize="24" FontWeight="Bold"
+                   Margin="0,0,0,20" />
+        <Border Grid.Row="1" BorderBrush="{DynamicResource SystemControlForegroundBaseMediumBrush}" BorderThickness="1"
+                CornerRadius="8">
+            <!--<ListBox ItemsSource="{Binding Contacts}" >
+            <ListBox.ItemTemplate>
+                <DataTemplate x:DataType="models:ContactItem">
+                    <Border Margin="10,5" Padding="15"
+                            Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="6">
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="16" />
+                            <TextBlock Text="{Binding Phone}" FontSize="14"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                            <TextBlock Text="{Binding Email}" FontSize="14"
+                                       Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}" />
+                        </StackPanel>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+            </ListBox>-->
+            <control:UniversalGroupScrollViewer x:Name="UniversalGroupScrollViewer" ItemsSource="{Binding Contacts}">
+                <control:UniversalGroupScrollViewer.ItemTemplate>
+                    <DataTemplate x:DataType="models:ContactItem">
+                        <Border Margin="10,5" Padding="15" Background="{DynamicResource SystemControlBackgroundBaseLowBrush}" CornerRadius="6">
+                            <StackPanel>
+                                <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="16"/>
+                                <TextBlock Text="{Binding Phone}" FontSize="14" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                                <TextBlock Text="{Binding Email}" FontSize="14" Foreground="{DynamicResource SystemControlForegroundBaseMediumBrush}"/>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </control:UniversalGroupScrollViewer.ItemTemplate>
+            </control:UniversalGroupScrollViewer>
+        </Border>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20" Margin="0,20,0,0">
+            <TextBlock Text="总联系人数量: " FontSize="14" VerticalAlignment="Center"/>
+            <TextBlock Text="{Binding Contacts.Count}" FontSize="14" FontWeight="Bold" VerticalAlignment="Center"/>
+        </StackPanel>
+    </Grid>
+</UserControl> 
