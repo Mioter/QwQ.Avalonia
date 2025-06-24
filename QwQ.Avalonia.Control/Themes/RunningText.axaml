@@ -3,56 +3,125 @@
         xmlns:local="using:QwQ.Avalonia.Control">
 
     <Styles.Resources>
+        <!-- 水平滚动模板 -->
         <ControlTemplate x:Key="RunningText.Template.Horizontal" TargetType="{x:Type local:RunningText}">
             <Border Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}"
                     BorderThickness="{TemplateBinding BorderThickness}"
                     Padding="{TemplateBinding Padding}"
-                    UseLayoutRounding="{TemplateBinding UseLayoutRounding}">
-                <Canvas x:Name="PART_Canvas" ClipToBounds="{TemplateBinding ClipToBounds}"
-                        Height="{Binding #PART_Txt1.Bounds.Height}" VerticalAlignment="Center">
-                    <TextBlock x:Name="PART_Txt1" Text="{TemplateBinding Text}" />
-                    <TextBlock x:Name="PART_Txt2" Text="{TemplateBinding Text}" />
+                    UseLayoutRounding="{TemplateBinding UseLayoutRounding}"
+                    CornerRadius="{TemplateBinding CornerRadius}">
+                <Canvas x:Name="PART_Canvas" 
+                        ClipToBounds="{TemplateBinding ClipToBounds}"
+                        Height="{Binding #PART_Txt1.Bounds.Height}" 
+                        VerticalAlignment="Center">
+                    <TextBlock x:Name="PART_Txt1" 
+                               Text="{TemplateBinding Text}"
+                               Foreground="{TemplateBinding Foreground}"
+                               FontFamily="{TemplateBinding FontFamily}"
+                               FontSize="{TemplateBinding FontSize}"
+                               FontWeight="{TemplateBinding FontWeight}"
+                               FontStyle="{TemplateBinding FontStyle}"
+                               TextWrapping="NoWrap"
+                               TextTrimming="None" />
+                    <TextBlock x:Name="PART_Txt2" 
+                               Text="{TemplateBinding Text}"
+                               Foreground="{TemplateBinding Foreground}"
+                               FontFamily="{TemplateBinding FontFamily}"
+                               FontSize="{TemplateBinding FontSize}"
+                               FontWeight="{TemplateBinding FontWeight}"
+                               FontStyle="{TemplateBinding FontStyle}"
+                               TextWrapping="NoWrap"
+                               TextTrimming="None" />
                 </Canvas>
             </Border>
         </ControlTemplate>
 
+        <!-- 垂直滚动模板 -->
         <ControlTemplate x:Key="RunningText.Template.Vertical" TargetType="{x:Type local:RunningText}">
             <Border Background="{TemplateBinding Background}"
                     BorderBrush="{TemplateBinding BorderBrush}"
                     BorderThickness="{TemplateBinding BorderThickness}"
                     Padding="{TemplateBinding Padding}"
-                    UseLayoutRounding="{TemplateBinding UseLayoutRounding}">
-                <Canvas x:Name="PART_Canvas" ClipToBounds="{TemplateBinding ClipToBounds}"
-                        MinWidth="{TemplateBinding FontSize}" HorizontalAlignment="Center">
-                    <TextBlock x:Name="PART_Txt1" Text="{TemplateBinding Text}" TextWrapping="Wrap"
-                               MaxWidth="{Binding #PART_Canvas.Bounds.Width}" />
-                    <TextBlock x:Name="PART_Txt2" Text="{TemplateBinding Text}" TextWrapping="Wrap"
-                               MaxWidth="{Binding #PART_Canvas.Bounds.Width}" />
+                    UseLayoutRounding="{TemplateBinding UseLayoutRounding}"
+                    CornerRadius="{TemplateBinding CornerRadius}">
+                <Canvas x:Name="PART_Canvas" 
+                        ClipToBounds="{TemplateBinding ClipToBounds}"
+                        MinWidth="{TemplateBinding FontSize}" 
+                        HorizontalAlignment="Center">
+                    <TextBlock x:Name="PART_Txt1" 
+                               Text="{TemplateBinding Text}"
+                               Foreground="{TemplateBinding Foreground}"
+                               FontFamily="{TemplateBinding FontFamily}"
+                               FontSize="{TemplateBinding FontSize}"
+                               FontWeight="{TemplateBinding FontWeight}"
+                               FontStyle="{TemplateBinding FontStyle}"
+                               TextWrapping="Wrap"
+                               MaxWidth="{Binding #PART_Canvas.Bounds.Width}"
+                               TextTrimming="None" />
+                    <TextBlock x:Name="PART_Txt2" 
+                               Text="{TemplateBinding Text}"
+                               Foreground="{TemplateBinding Foreground}"
+                               FontFamily="{TemplateBinding FontFamily}"
+                               FontSize="{TemplateBinding FontSize}"
+                               FontWeight="{TemplateBinding FontWeight}"
+                               FontStyle="{TemplateBinding FontStyle}"
+                               TextWrapping="Wrap"
+                               MaxWidth="{Binding #PART_Canvas.Bounds.Width}"
+                               TextTrimming="None" />
                 </Canvas>
             </Border>
         </ControlTemplate>
     </Styles.Resources>
 
-
+    <!-- 基础样式 -->
     <Style Selector="local|RunningText">
-        <Setter Property="Padding" Value="6 3" />
+        <Setter Property="Padding" Value="8 4" />
         <Setter Property="UseLayoutRounding" Value="True" />
         <Setter Property="IsHitTestVisible" Value="False" />
         <Setter Property="ClipToBounds" Value="True" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontFamily" Value="Segoe UI" />
+        <Setter Property="FontWeight" Value="Normal" />
+        <Setter Property="FontStyle" Value="Normal" />
     </Style>
 
+    <!-- 占位符样式 -->
+    <Style Selector="local|RunningText:placeholder">
+        <Setter Property="Foreground" Value="{DynamicResource TextBlockTertiaryForeground}" />
+        <Setter Property="Opacity" Value="0.6" />
+        <Setter Property="FontStyle" Value="Italic" />
+    </Style>
+
+    <!-- 水平方向样式 -->
     <Style Selector="local|RunningText[Direction=RightToLeft]">
         <Setter Property="Template" Value="{StaticResource RunningText.Template.Horizontal}" />
     </Style>
     <Style Selector="local|RunningText[Direction=LeftToRight]">
         <Setter Property="Template" Value="{StaticResource RunningText.Template.Horizontal}" />
     </Style>
+
+    <!-- 垂直方向样式 -->
     <Style Selector="local|RunningText[Direction=BottomToTop]">
         <Setter Property="Template" Value="{StaticResource RunningText.Template.Vertical}" />
     </Style>
     <Style Selector="local|RunningText[Direction=TopToBottom]">
         <Setter Property="Template" Value="{StaticResource RunningText.Template.Vertical}" />
+    </Style>
+
+    <!-- 悬停效果 -->
+    <Style Selector="local|RunningText:pointerover">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundPointerOver}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ControlBorderBrushPointerOver}" />
+    </Style>
+
+    <!-- 焦点效果 -->
+    <Style Selector="local|RunningText:focus">
+        <Setter Property="BorderBrush" Value="{DynamicResource FocusBorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
     </Style>
 
 </Styles>

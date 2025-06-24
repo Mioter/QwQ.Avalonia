@@ -47,32 +47,29 @@ public class LetterGroup(char key, IReadOnlyList<object> items)
     public char Key { get; } = key;
     public IReadOnlyList<object> Items { get; } = items;
     public bool HasContent => Items.Count > 0;
-    public bool IsSpecial { get; set; } = false;
+    public bool IsSpecial { get; set; }
 }
 
 public class AlphabetLetterViewModel(char letter) : ObservableObject
 {
-    private bool _isEnabled;
-    private bool _isCurrent;
-    private bool _isSpecial;
     public char Letter { get; } = letter;
 
     public bool IsEnabled
     {
-        get => _isEnabled;
-        set => SetProperty(ref _isEnabled, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsCurrent
     {
-        get => _isCurrent;
-        set => SetProperty(ref _isCurrent, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 
     public bool IsSpecial
     {
-        get => _isSpecial;
-        set => SetProperty(ref _isSpecial, value);
+        get;
+        set => SetProperty(ref field, value);
     }
 }
 

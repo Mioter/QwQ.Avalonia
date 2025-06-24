@@ -9,17 +9,11 @@ namespace Sample.ViewModels;
 
 public class AlphabeticalScrollViewerPageViewModel : INotifyPropertyChanged
 {
-    private ObservableCollection<ContactItem> _contacts;
-    private ObservableCollection<ContactItem> _favorites;
-    private string _newName = string.Empty;
-    private string _newPhone = string.Empty;
-    private string _newEmail = string.Empty;
-    private string _newDepartment = string.Empty;
 
     public AlphabeticalScrollViewerPageViewModel()
     {
-        _contacts = new ObservableCollection<ContactItem>();
-        _favorites = new ObservableCollection<ContactItem>();
+        Contacts = new ObservableCollection<ContactItem>();
+        Favorites = new ObservableCollection<ContactItem>();
         InitializeSampleData();
         
         AddContactCommand = new RelayCommand(AddContact, CanAddContact);
@@ -30,12 +24,12 @@ public class AlphabeticalScrollViewerPageViewModel : INotifyPropertyChanged
 
     public ObservableCollection<ContactItem> Contacts
     {
-        get => _contacts;
+        get;
         set
         {
-            if (_contacts != value)
+            if (field != value)
             {
-                _contacts = value;
+                field = value;
                 OnPropertyChanged();
             }
         }
@@ -43,12 +37,12 @@ public class AlphabeticalScrollViewerPageViewModel : INotifyPropertyChanged
 
     public ObservableCollection<ContactItem> Favorites
     {
-        get => _favorites;
+        get;
         set
         {
-            if (_favorites != value)
+            if (field != value)
             {
-                _favorites = value;
+                field = value;
                 OnPropertyChanged();
             }
         }
@@ -56,56 +50,56 @@ public class AlphabeticalScrollViewerPageViewModel : INotifyPropertyChanged
 
     public string NewName
     {
-        get => _newName;
+        get;
         set
         {
-            if (_newName != value)
+            if (field != value)
             {
-                _newName = value;
+                field = value;
                 OnPropertyChanged();
                 (AddContactCommand as RelayCommand)?.RaiseCanExecuteChanged();
             }
         }
-    }
+    } = string.Empty;
 
     public string NewPhone
     {
-        get => _newPhone;
+        get;
         set
         {
-            if (_newPhone != value)
+            if (field != value)
             {
-                _newPhone = value;
+                field = value;
                 OnPropertyChanged();
             }
         }
-    }
+    } = string.Empty;
 
     public string NewEmail
     {
-        get => _newEmail;
+        get;
         set
         {
-            if (_newEmail != value)
+            if (field != value)
             {
-                _newEmail = value;
+                field = value;
                 OnPropertyChanged();
             }
         }
-    }
+    } = string.Empty;
 
     public string NewDepartment
     {
-        get => _newDepartment;
+        get;
         set
         {
-            if (_newDepartment != value)
+            if (field != value)
             {
-                _newDepartment = value;
+                field = value;
                 OnPropertyChanged();
             }
         }
-    }
+    } = string.Empty;
 
     public ICommand AddContactCommand { get; }
     public ICommand RemoveContactCommand { get; }
