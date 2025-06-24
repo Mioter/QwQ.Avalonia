@@ -222,7 +222,7 @@ public class RunningText : TemplatedControl
         
     private void OnSizeChanged(object? sender, SizeChangedEventArgs e)
     {
-        if (_ignoreSizeChanges)
+        if (sender is TextBlock && _ignoreSizeChanges)
             return;
         
         BeginUpdate();
