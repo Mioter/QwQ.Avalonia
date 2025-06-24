@@ -25,6 +25,7 @@
         </PackageReference>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
         <PackageReference Include="Semi.Avalonia" Version="11.2.1.8" />
+        <PackageReference Include="Xaml.Behaviors.Avalonia" Version="11.3.0.11" />
     </ItemGroup>
 
     <ItemGroup>
