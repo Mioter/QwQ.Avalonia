@@ -11,7 +11,7 @@
                         <ScrollViewer Name="PART_ScrollViewer" VerticalScrollBarVisibility="Hidden">
                             <ItemsControl Name="PART_ItemsControl" ItemsSource="{TemplateBinding GroupedItems}">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
+                                    <DataTemplate DataType="controls:UniversalGroupScrollViewer+GroupInfo">
                                         <StackPanel>
                                             <TextBlock Name="PART_GroupHeader"
                                                        Text="{Binding Display}"
@@ -48,7 +48,7 @@
                             </Style>
                         </ItemsControl.Styles>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate DataType="controls:UniversalGroupScrollViewer+GroupInfo">
                                 <Button Content="{Binding Display}"
                                         Command="{Binding $parent[controls:UniversalGroupScrollViewer].ScrollToGroupCommand}"
                                         CommandParameter="{Binding Key}"

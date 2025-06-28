@@ -4,43 +4,15 @@ using Avalonia.Controls.Templates;
 using Avalonia.LogicalTree;
 using Avalonia.Controls.Primitives;
 using System.Windows.Input;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using Avalonia.Metadata;
 using Avalonia.Input;
 using Avalonia.Media;
 using System.Collections;
 using System.Collections.Specialized;
+using QwQ.Avalonia.Control.MVVMBase;
 
 namespace QwQ.Avalonia.Control;
 
-public abstract class ObservableObject : INotifyPropertyChanged
-{
-    public event PropertyChangedEventHandler? PropertyChanged;
-    protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
-    {
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-    }
-
-    protected bool SetProperty<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-    {
-        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-        field = value;
-        OnPropertyChanged(propertyName);
-        return true;
-    }
-}
-
-internal class RelayCommand<T>(Action<T?> execute, Func<T?, bool>? canExecute = null) : ICommand
-{
-
-    public event EventHandler? CanExecuteChanged;
-
-    public bool CanExecute(object? parameter) => canExecute?.Invoke((T?)parameter) ?? true;
-    public void Execute(object? parameter) => execute((T?)parameter);
-
-    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
-}
 
 public class LetterGroup(char key, IReadOnlyList<object> items)
 {
@@ -50,7 +22,7 @@ public class LetterGroup(char key, IReadOnlyList<object> items)
     public bool IsSpecial { get; set; }
 }
 
-public class AlphabetLetterViewModel(char letter) : ObservableObject
+public class AlphabetLetterViewModel(char letter) : QwQObservableObject
 {
     public char Letter { get; } = letter;
 

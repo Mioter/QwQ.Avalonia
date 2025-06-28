@@ -11,7 +11,7 @@
                         <ScrollViewer Name="PART_ScrollViewer" VerticalScrollBarVisibility="Hidden">
                             <ItemsControl Name="PART_ItemsControl" ItemsSource="{TemplateBinding GroupedItems}">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
+                                    <DataTemplate DataType="controls:LetterGroup">
                                         <StackPanel>
                                             <TextBlock Name="PART_GroupHeader" 
                                                        Text="{Binding Key}" 
@@ -50,7 +50,7 @@
                             </Style>
                         </ItemsControl.Styles>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate DataType="controls:AlphabetLetterViewModel">
                                 <Button Content="{Binding Letter}"
                                         Command="{Binding $parent[controls:AlphabeticalScrollViewer].ScrollToLetterCommand}"
                                         CommandParameter="{Binding Letter}"

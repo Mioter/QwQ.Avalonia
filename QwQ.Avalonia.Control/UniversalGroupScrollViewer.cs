@@ -2,16 +2,11 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Controls.Templates;
-using Avalonia.Input;
 using Avalonia.Metadata;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.Linq;
 using System.Windows.Input;
 using Avalonia.Media;
+using QwQ.Avalonia.Control.MVVMBase;
 
 namespace QwQ.Avalonia.Control;
 
@@ -21,7 +16,7 @@ namespace QwQ.Avalonia.Control;
 public class UniversalGroupScrollViewer : TemplatedControl
 {
     // 分组信息
-    public class GroupInfo(object key, string display, IReadOnlyList<object> items) : ObservableObject
+    public class GroupInfo(object key, string display, IReadOnlyList<object> items) : QwQObservableObject
     {
         public object Key { get; set; } = key;
         public string Display { get; set; } = display;
